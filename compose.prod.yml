@@ -1,0 +1,7 @@
+services:
+  authelia:
+    volumes:
+      - authelia_config:/config
+
+volumes:
+  authelia_config:
