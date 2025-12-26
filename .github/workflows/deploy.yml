@@ -11,28 +11,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Populate Secrets
+      - name: Deploy Stack
         env:
+          # Domain Variables
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          AUTHELIA_SUBDOMAIN: ${{ vars.AUTHELIA_SUBDOMAIN }}
+          
+          # Secrets
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           STORAGE_ENCRYPTION_KEY: ${{ secrets.STORAGE_ENCRYPTION_KEY }}
-        run: |
-          mkdir -p config/secrets
-          echo "$JWT_SECRET" > config/secrets/jwt_secret
-          echo "$SESSION_SECRET" > config/secrets/session_secret
-          echo "$POSTGRES_PASSWORD" > config/secrets/postgres_password
-          echo "$STORAGE_ENCRYPTION_KEY" > config/secrets/storage_encryption_key
-
-      - name: Create .env file
-        env:
-          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
-          AUTHELIA_SUBDOMAIN: ${{ vars.AUTHELIA_SUBDOMAIN }}
-        run: |
-          echo "DOMAIN_NAME=$DOMAIN_NAME" >> .env
-          echo "AUTHELIA_SUBDOMAIN=$AUTHELIA_SUBDOMAIN" >> .env
-
-      - name: Deploy Stack
         run: |
           docker compose pull
           docker compose up -d --remove-orphans

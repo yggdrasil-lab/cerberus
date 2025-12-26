@@ -16,9 +16,7 @@ cerberus/
 ├── .github/workflows/   # CI/CD pipelines
 ├── config/
 │   ├── configuration.yml    # Main Authelia config
-│   ├── users_database.yml   # File-based user backend
-│   ├── notification.txt     # Emails land here (for now)
-│   └── secrets/             # Secrets (generated)
+│   └── users_database.yml   # File-based user backend
 ├── .env.example             # Template for environment variables
 └── docker-compose.yml
 ```
@@ -35,19 +33,16 @@ cerberus/
 ### 2. Configuration
 
 **Environment Variables:**
-Copy `.env.example` to `.env` and adjust the values:
+Copy `.env.example` to `.env` and adjust the values. This file is **mandatory** for manual local deployments (`docker compose up`) as it contains all domains and sensitive secrets.
+
 ```bash
 cp .env.example .env
 ```
+
+Required variables:
 - `DOMAIN_NAME`: Your main domain (e.g., `tienzo.net`).
 - `AUTHELIA_SUBDOMAIN`: Subdomain for the auth portal (e.g., `auth`).
-
-**Secrets:**
-Ensure the following files exist in `config/secrets/` (generated via script or manually):
-- `jwt_secret`
-- `session_secret`
-- `postgres_password`
-- `storage_encryption_key`
+- `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings.
 
 ### 3. Start
 
@@ -57,18 +52,20 @@ docker compose up -d
 
 ### 4. User Management
 
-- A default `admin` user has been created in `config/users_database.yml`.
+- A default `admin` user is defined in `config/users_database.yml`.
 - **IMPORTANT**: You must update the password hash for this user.
 - Generate a new password hash:
   ```bash
   docker compose run --rm authelia authelia crypto hash generate argon2id --password 'YourNewPassword'
   ```
-- Update `config/users_database.yml` with the output.
-- Restart Authelia: `docker compose restart authelia`.
+- Update `config/users_database.yml` with the output and restart:
+  ```bash
+  docker compose restart authelia
+  ```
 
 ## CI/CD (GitHub Actions)
 
-The repository includes a GitHub Actions workflow (`deploy.yml`) to validate configuration on push to `main`.
+The project uses a GitHub Actions workflow (`deploy.yml`) running on a **self-hosted runner**. It injects secrets directly from GitHub into the environment.
 
 **Required Repository Secrets:**
 - `JWT_SECRET`
@@ -86,24 +83,15 @@ This stack registers a middleware named `authelia@docker`.
 
 ### Protecting other Services
 
-To protect another service (e.g., `grafana`) in your "Olympus" or other stacks, add these labels to that service's `docker-compose.yml`:
+To protect another service (e.g., `grafana`) in your "Olympus" stack, add this label to that service:
 
 ```yaml
 labels:
   - "traefik.http.routers.grafana.middlewares=authelia@docker"
 ```
 
-### Forward Auth Configuration
-
-The middleware is configured automatically via labels on the `authelia` container. It uses the environment variables to set the correct redirection URLs:
-
-```yaml
-- "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}"
-```
-
 ## Security Notes
 
-- **Secrets**: In production, ensure `config/secrets/` files are restricted (chmod 600).
-- **TLS**: This setup assumes Traefik handles SSL termination.
-- **Notifier**: Currently set to `filesystem` (`config/notification.txt`). For production, configure SMTP in `config/configuration.yml`.
-- **Data Persistence**: Data is stored in named Docker volumes (`cerberus_postgres_data` and `cerberus_redis_data`).
+- **Environment Secrets**: Secrets are passed via environment variables to avoid bind-mount issues in containerized runners.
+- **TLS**: SSL termination is handled by Traefik.
+- **Data Persistence**: Uses named Docker volumes (`postgres_data`, `redis_data`).

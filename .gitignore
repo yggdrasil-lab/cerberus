@@ -1,6 +1,3 @@
-# Secrets
-config/secrets/*
-
 # Temporary/Generated Files
 config/notification.txt
 *.log
