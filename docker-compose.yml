@@ -1,0 +1,73 @@
+version: '3.8'
+
+networks:
+  aether-net:
+    external: true
+  internal:
+    driver: bridge
+
+services:
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+    user: "1000:1000"
+    volumes:
+      - ./config:/config
+    networks:
+      - aether-net
+      - internal
+    environment:
+      - TZ=UTC
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - AUTHELIA_SUBDOMAIN=${AUTHELIA_SUBDOMAIN}
+      - X_AUTHELIA_CONFIG_FILTERS=template
+      # Secrets should be passed via files in production, using env vars for prototype simplicity or where appropriate
+      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/config/secrets/jwt_secret
+      - AUTHELIA_SESSION_SECRET_FILE=/config/secrets/session_secret
+      - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/config/secrets/postgres_password
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/config/secrets/storage_encryption_key
+    depends_on:
+      - postgres
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.authelia.entrypoints=websecure"
+      - "traefik.http.routers.authelia.tls=true"
+      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}"
+      - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+      
+  postgres:
+    image: postgres:15-alpine
+    container_name: authelia-postgres
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    environment:
+      - POSTGRES_USER=authelia
+      - POSTGRES_DB=authelia
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+
+  redis:
+    image: redis:7-alpine
+    container_name: authelia-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    command: redis-server --save 60 1 --loglevel warning
+
+volumes:
+  postgres_data:
+  redis_data:
+
+secrets:
+  postgres_password:
+    file: ./config/secrets/postgres_password

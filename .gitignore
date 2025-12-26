@@ -1,0 +1,10 @@
+# Secrets
+config/secrets/*
+
+# Temporary/Generated Files
+config/notification.txt
+*.log
+.DS_Store
+
+# Environment variables
+.env

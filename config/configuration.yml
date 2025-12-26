@@ -1,0 +1,65 @@
+###############################################################
+#                   Authelia Configuration                    #
+###############################################################
+
+server:
+  address: tcp://0.0.0.0:9091
+  endpoints:
+    enable_pprof: false
+
+log:
+  level: info
+  format: text
+
+identity_validation:
+  reset_password:
+    jwt_secret: "" # This will be overridden by AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+    password:
+      algorithm: argon2id
+
+access_control:
+  default_policy: 'one_factor'
+  networks:
+    - name: internal
+      networks:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+  rules:
+    - domain: '{{ env "AUTHELIA_SUBDOMAIN" }}.{{ env "DOMAIN_NAME" }}'
+      policy: bypass
+
+session:
+  name: authelia_session
+  cookies:
+    - domain: '{{ env "DOMAIN_NAME" }}'
+      authelia_url: 'https://{{ env "AUTHELIA_SUBDOMAIN" }}.{{ env "DOMAIN_NAME" }}'
+      default_redirection_url: 'https://{{ env "DOMAIN_NAME" }}'
+  redis:
+    host: authelia-redis
+    port: 6379
+
+storage:
+  postgres:
+    address: tcp://authelia-postgres:5432
+    database: authelia
+    schema: public
+    username: authelia
+    # password: "" # Loaded via environment variable AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE
+
+notifier:
+  disable_startup_check: false
+  filesystem:
+    filename: /config/notification.txt
+
+totp:
+  issuer: authelia.com
+
+regulation:
+  max_retries: 3
+  find_time: 120
+  ban_time: 300
