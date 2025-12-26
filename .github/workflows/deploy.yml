@@ -5,8 +5,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,5 +32,7 @@ jobs:
           echo "DOMAIN_NAME=$DOMAIN_NAME" >> .env
           echo "AUTHELIA_SUBDOMAIN=$AUTHELIA_SUBDOMAIN" >> .env
 
-      - name: Config Validation
-        run: docker compose config
+      - name: Deploy Stack
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans
