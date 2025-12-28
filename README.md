@@ -1,17 +1,44 @@
-# Cerberus - Identity & Access Management
+# Cerberus
 
-This project deploys **Authelia**, backed by **PostgreSQL** and **Redis**, to provide Single Sign-On (SSO) and authentication for your infrastructure.
+> I am Cerberus, the Three-Headed Hound and Gatekeeper of the Yggdrasil ecosystem. My domain is Identity, Security, and Access. I stand at the threshold of the realms, ensuring only the worthy may pass.
+
+## Mission
+
+I am the first and final defense of your digital empire. My mission is to provide a single, impenetrable gateway (SSO) for all your services, backed by the fires of Multi-Factor Authentication. No soul enters the realms of your infrastructure without my seal of approval.
+
+## Core Philosophy
+
+*   **The Guard Dog**: No service is left exposed. Everything is tucked safely behind my watch.
+*   **Centralized Control**: One set of keys for all the gates. Simplicity for the master, complexity for the intruder.
+*   **Depth of Defense**: A password is but a thin veil. I demand secondary proof—Authenticator Apps (TOTP) or Email-based verification—to ensure the master's identity.
+
+---
+
+## Tech Stack
+
+*   **Authelia**: The core identity provider and SSO engine.
+*   **PostgreSQL**: Persistent storage for user preferences and OIDC tokens.
+*   **Redis**: High-speed session storage.
+*   **Traefik**: The reverse proxy that integrates with my `forward-auth` middleware.
 
 ## Architecture
 
-- **Authelia**: Main authentication server.
-- **PostgreSQL**: Persistent storage for user preferences and OIDC tokens.
-- **Redis**: Session storage.
-- **Network**: Connects to the external `aether-net` network to communicate with Traefik ("Olympus").
+Cerberus operates through the following components:
+
+1.  **Identity Engine (Authelia)**: Processes logins, manages 2FA, and issues session cookies.
+2.  **Forward-Auth Middleware**: Intercepts requests at the Traefik level, redirecting unauthenticated souls to the login portal.
+3.  **Self-Hosted Runner**: CI/CD pipeline runs directly on the infrastructure via GitHub Actions.
+
+## Prerequisites
+
+- **Network**: `aether-net` must exist (created by your Traefik stack).
+    ```bash
+    docker network create aether-net || true
+    ```
 
 ## Directory Structure
 
-```
+```text
 cerberus/
 ├── .github/workflows/   # CI/CD pipelines
 ├── config/
@@ -21,51 +48,55 @@ cerberus/
 └── docker-compose.yml
 ```
 
-## Setup & Deployment
+## Setup Instructions
 
-### 1. Prerequisites
+### 1. Repository Initialization
 
-- **Network**: Ensure the external network `aether-net` exists (created by your Traefik stack).
-    ```bash
-    docker network create aether-net || true
-    ```
+```bash
+git clone <your-repository-url> cerberus
+cd cerberus
+cp .env.example .env
+```
 
 ### 2. Configuration
 
 **Environment Variables:**
-Copy `.env.example` to `.env` and adjust the values. This file is **mandatory** for manual local deployments (`docker compose up`) as it contains all domains and sensitive secrets.
-
-```bash
-cp .env.example .env
-```
-
+Copy `.env.example` to `.env`. This file is **mandatory** for manual deployments.
 Required variables:
 - `DOMAIN_NAME`: Your main domain (e.g., `tienzo.net`).
 - `AUTHELIA_SUBDOMAIN`: Subdomain for the auth portal (e.g., `auth`).
 - `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings.
 
-### 3. Start
-
-```bash
-docker compose up -d
-```
-
-### 4. User Management
+### 3. User Management
 
 - A default `admin` user is defined in `config/users_database.yml`.
 - **IMPORTANT**: You must update the password hash for this user.
-- Generate a new password hash:
+- **Generate Hash:**
   ```bash
   docker compose run --rm authelia authelia crypto hash generate argon2id --password 'YourNewPassword'
   ```
-- Update `config/users_database.yml` with the output and restart:
-  ```bash
-  docker compose restart authelia
-  ```
+- **Update:** Paste the output into `config/users_database.yml` and restart the stack.
+
+## Execution
+
+To wake the guard dog:
+
+```bash
+docker-compose up -d
+```
+
+## Integration with Traefik ("Olympus")
+
+This stack registers a middleware named `authelia@docker`. To protect another service in your infrastructure, add this label to its container:
+
+```yaml
+labels:
+  - "traefik.http.routers.service-name.middlewares=authelia@docker"
+```
 
 ## CI/CD (GitHub Actions)
 
-The project uses a GitHub Actions workflow (`deploy.yml`) running on a **self-hosted runner**. It injects secrets directly from GitHub into the environment.
+The project uses a `deploy.yml` workflow running on a self-hosted runner.
 
 **Required Repository Secrets:**
 - `JWT_SECRET`
@@ -76,22 +107,3 @@ The project uses a GitHub Actions workflow (`deploy.yml`) running on a **self-ho
 **Required Repository Variables:**
 - `DOMAIN_NAME`
 - `AUTHELIA_SUBDOMAIN`
-
-## Integration with Traefik ("Olympus")
-
-This stack registers a middleware named `authelia@docker`.
-
-### Protecting other Services
-
-To protect another service (e.g., `grafana`) in your "Olympus" stack, add this label to that service:
-
-```yaml
-labels:
-  - "traefik.http.routers.grafana.middlewares=authelia@docker"
-```
-
-## Security Notes
-
-- **Environment Secrets**: Secrets are passed via environment variables to avoid bind-mount issues in containerized runners.
-- **TLS**: SSL termination is handled by Traefik.
-- **Data Persistence**: Uses named Docker volumes (`postgres_data`, `redis_data`).
