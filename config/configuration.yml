@@ -32,6 +32,9 @@ access_control:
   rules:
     - domain: '{{ env "AUTHELIA_SUBDOMAIN" }}.{{ env "DOMAIN_NAME" }}'
       policy: bypass
+    - domain: '*.{{ env "DOMAIN_NAME" }}'
+      subject: 'group:admins'
+      policy: two_factor
 
 session:
   name: authelia_session
