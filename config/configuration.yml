@@ -52,9 +52,11 @@ storage:
     # password: "" # Loaded via environment variable AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE
 
 notifier:
-  disable_startup_check: false
-  filesystem:
-    filename: /config/notification.txt
+  smtp:
+    address: smtp://hermes:2525
+    sender: 'Cerberus <cerberus@{{ env "DOMAIN_NAME" }}>'
+    identifier: localhost
+    disable_require_tls: true
 
 totp:
   issuer: authelia.com
