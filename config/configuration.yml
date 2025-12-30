@@ -37,7 +37,7 @@ access_control:
       policy: two_factor
 
 session:
-  name: authelia_session
+  name: '{{ env "SESSION_NAME" }}'
   cookies:
     - domain: '{{ env "DOMAIN_NAME" }}'
       authelia_url: 'https://{{ env "AUTHELIA_SUBDOMAIN" }}.{{ env "DOMAIN_NAME" }}'

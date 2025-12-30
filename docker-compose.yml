@@ -27,6 +27,7 @@ services:
       - AUTHELIA_SESSION_SECRET=${SESSION_SECRET}
       - AUTHELIA_STORAGE_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - AUTHELIA_STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY}
+      - SESSION_NAME=authelia_session
     depends_on:
       - postgres
       - redis
