@@ -2,3 +2,4 @@ services:
   authelia:
     environment:
       - AUTHELIA_LOG_LEVEL=debug
+      - SESSION_NAME=authelia_session_dev
