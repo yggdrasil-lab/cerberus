@@ -16,7 +16,7 @@ fi
 
 # Run docker compose
 echo "Starting development environment..."
-docker compose up -d --remove-orphans
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans
 
 echo "Development environment started."
-docker compose logs -f
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
