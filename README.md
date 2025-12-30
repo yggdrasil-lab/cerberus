@@ -17,6 +17,7 @@ I am the first and final defense of your digital empire. My mission is to provid
 ## Tech Stack
 
 *   **Authelia**: The core identity provider and SSO engine.
+*   **LLDAP**: Lightweight LDAP server for user management.
 *   **PostgreSQL**: Persistent storage for user preferences and OIDC tokens.
 *   **Redis**: High-speed session storage.
 *   **Traefik**: The reverse proxy that integrates with my `forward-auth` middleware.
@@ -26,8 +27,9 @@ I am the first and final defense of your digital empire. My mission is to provid
 Cerberus operates through the following components:
 
 1.  **Identity Engine (Authelia)**: Processes logins, manages 2FA, and issues session cookies.
-2.  **Forward-Auth Middleware**: Intercepts requests at the Traefik level, redirecting unauthenticated souls to the login portal.
-3.  **Self-Hosted Runner**: CI/CD pipeline runs directly on the infrastructure via GitHub Actions.
+2.  **User Directory (LLDAP)**: Stores identities and groups.
+3.  **Forward-Auth Middleware**: Intercepts requests at the Traefik level, redirecting unauthenticated souls to the login portal.
+4.  **Self-Hosted Runner**: CI/CD pipeline runs directly on the infrastructure via GitHub Actions.
 
 ## Prerequisites
 
@@ -43,7 +45,6 @@ cerberus/
 ├── .github/workflows/   # CI/CD pipelines
 ├── config/
 │   ├── configuration.yml    # Main Authelia config
-│   └── users_database.yml   # File-based user backend
 ├── .env.example             # Template for environment variables
 ├── start_dev.sh             # Local development startup script
 ├── start.sh                 # Production deployment script (used by CI/CD)
@@ -68,19 +69,25 @@ You must create a `.env` file from `.env.example`. This file is **mandatory**.
 cp .env.example .env
 ```
 Required variables:
-- `DOMAIN_NAME`: Your main domain (e.g., `tienzo.net`).
+- `DOMAIN_NAME`: Your main domain (e.g., `yourdomain.com`).
 - `AUTHELIA_SUBDOMAIN`: Subdomain for the auth portal (e.g., `auth`).
-- `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings.
+- `LLDAP_SUBDOMAIN`: Subdomain for the LLDAP management portal (e.g., `ldap`).
+- `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings for Authelia.
+- `LLDAP_JWT_SECRET`, `LLDAP_KEY_SEED`, `LLDAP_LDAP_USER_PASS`: Secrets for LLDAP.
 
-### 3. User Management
+### 3. User Management (LLDAP)
 
-- A default `admin` user is defined in `config/users_database.yml`.
-- **IMPORTANT**: You must update the password hash for this user.
-- **Generate Hash:**
-  ```bash
-  docker compose run --rm authelia authelia crypto hash generate argon2id --password 'YourNewPassword'
-  ```
-- **Update:** Paste the output into `config/users_database.yml` and restart the stack.
+- Access the LLDAP dashboard at `https://ldap.<your-domain>`.
+- **Default Admin**: `admin`.
+- **Password**: The value of `LLDAP_LDAP_USER_PASS` set in your `.env`.
+- **Create Users**: Add users via the LLDAP web interface.
+- **Groups**: Create groups (e.g., `admins`) to match your Authelia access policies.
+
+> [!NOTE]
+> **Double Login**: When accessing the LLDAP dashboard, you will be prompted to log in **twice**.
+> 1.  **Authelia**: Verifies your identity and checks for 2FA.
+> 2.  **LLDAP**: A second login screen for the LLDAP internal admin interface.
+> This is a known limitation as LLDAP does not widely support header-based authentication for its web UI.
 
 ## Execution
 
@@ -125,6 +132,9 @@ The project uses a `deploy.yml` workflow running on a self-hosted runner.
 - `SESSION_SECRET`
 - `POSTGRES_PASSWORD`
 - `STORAGE_ENCRYPTION_KEY`
+- `LLDAP_JWT_SECRET`
+- `LLDAP_KEY_SEED`
+- `LLDAP_LDAP_USER_PASS`
 
 **Required Repository Variables:**
 - `DOMAIN_NAME`
