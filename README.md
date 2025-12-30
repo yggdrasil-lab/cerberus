@@ -45,7 +45,10 @@ cerberus/
 │   ├── configuration.yml    # Main Authelia config
 │   └── users_database.yml   # File-based user backend
 ├── .env.example             # Template for environment variables
-└── docker-compose.yml
+├── start_dev.sh             # Local development startup script
+├── start.sh                 # Production deployment script (used by CI/CD)
+├── docker-compose.yml       # Base configuration
+└── docker-compose.prod.yml  # Production overrides (volumes)
 ```
 
 ## Setup Instructions
@@ -55,13 +58,15 @@ cerberus/
 ```bash
 git clone <your-repository-url> cerberus
 cd cerberus
-cp .env.example .env
 ```
 
 ### 2. Configuration
 
 **Environment Variables:**
-Copy `.env.example` to `.env`. This file is **mandatory** for manual deployments.
+You must create a `.env` file from `.env.example`. This file is **mandatory**.
+```bash
+cp .env.example .env
+```
 Required variables:
 - `DOMAIN_NAME`: Your main domain (e.g., `tienzo.net`).
 - `AUTHELIA_SUBDOMAIN`: Subdomain for the auth portal (e.g., `auth`).
@@ -79,10 +84,27 @@ Required variables:
 
 ## Execution
 
-To wake the guard dog:
+### Local Development
+
+To wake the guard dog locally using the development script (which ensures the network exists and checks for `.env`):
 
 ```bash
-docker-compose up -d
+./start_dev.sh
+```
+
+### Production Deployment
+
+The `start.sh` script handles pulling images, setting volume permissions, and starting the stack with production overrides:
+
+```bash
+./start.sh
+```
+
+### Manual Execution (Minimal)
+
+```bash
+docker network create aether-net || true
+docker compose up -d
 ```
 
 ## Integration with Traefik ("Olympus")
