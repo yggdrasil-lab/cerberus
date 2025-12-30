@@ -1,7 +1,0 @@
-users:
-  admin:
-    displayname: "Administrator"
-    password: "$argon2id$v=19$m=65536,t=3,p=4$fh+8R0aSbfkHl7+pOBomhA$8hXbAcJRPja44uf+/4kjd2yhCs6nvDDfkZEdPqft/3Y"
-    email: admin@tienzo.net
-    groups:
-      - admins
