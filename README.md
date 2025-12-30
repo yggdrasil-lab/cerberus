@@ -46,7 +46,9 @@ cerberus/
 │   └── users_database.yml   # File-based user backend
 ├── .env.example             # Template for environment variables
 ├── start_dev.sh             # Local development startup script
-└── docker-compose.yml
+├── start.sh                 # Production deployment script (used by CI/CD)
+├── docker-compose.yml       # Base configuration
+└── docker-compose.prod.yml  # Production overrides (volumes)
 ```
 
 ## Setup Instructions
@@ -90,7 +92,15 @@ To wake the guard dog locally using the development script (which ensures the ne
 ./start_dev.sh
 ```
 
-### Manual Execution
+### Production Deployment
+
+The `start.sh` script handles pulling images, setting volume permissions, and starting the stack with production overrides:
+
+```bash
+./start.sh
+```
+
+### Manual Execution (Minimal)
 
 ```bash
 docker network create aether-net || true
