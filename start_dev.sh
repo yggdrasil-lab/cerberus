@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# Define network name
-NETWORK_NAME="aether-net"
 
-# Ensure network exists
-docker network inspect "$NETWORK_NAME" >/dev/null 2>&1 || docker network create "$NETWORK_NAME"
 
 # Check if .env file exists
 if [ ! -f .env ]; then
@@ -16,6 +12,7 @@ fi
 
 # Run docker compose
 echo "Starting development environment..."
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down --remove-orphans
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans
 
 echo "Development environment started."

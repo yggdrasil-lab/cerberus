@@ -17,4 +17,5 @@ docker cp ./config/. authelia:/config/
 docker run --rm --volumes-from authelia alpine chown -R 1000:1000 /config
 
 # 5. Start the stack
+docker compose -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
