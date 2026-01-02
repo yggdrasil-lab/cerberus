@@ -33,9 +33,13 @@ Cerberus operates through the following components:
 
 ## Prerequisites
 
-- **Network**: `aether-net` must exist (created by your Traefik stack).
+- **Docker Swarm**: The host must be in Swarm mode.
     ```bash
-    docker network create aether-net || true
+    docker swarm init
+    ```
+- **Network**: `aether-net` must exist as an overlay network (created by your Traefik stack).
+    ```bash
+    docker network create --driver overlay --attachable aether-net || true
     ```
 
 ## Directory Structure
@@ -46,10 +50,11 @@ cerberus/
 ├── config/
 │   ├── configuration.yml    # Main Authelia config
 ├── .env.example             # Template for environment variables
-├── start_dev.sh             # Local development startup script
-├── start.sh                 # Production deployment script (used by CI/CD)
+├── start_dev.sh             # Local development startup script (Swarm)
+├── start.sh                 # Production deployment script (Swarm, used by CI/CD)
 ├── docker-compose.yml       # Base configuration
-└── docker-compose.prod.yml  # Production overrides (volumes)
+├── docker-compose.prod.yml  # Production overrides (placement constraints, etc)
+└── docker-compose.dev.yml   # Development overrides (ports, logging)
 ```
 
 ## Setup Instructions
@@ -64,7 +69,7 @@ cd cerberus
 ### 2. Configuration
 
 **Environment Variables:**
-You must create a `.env` file from `.env.example`. This file is **mandatory**.
+You must create a `.env` file from `.env.example`. This file is **mandatory** for local development.
 ```bash
 cp .env.example .env
 ```
@@ -91,27 +96,32 @@ Required variables:
 
 ## Execution
 
-### Local Development
+### Local Development (Swarm)
 
-To wake the guard dog locally using the development script (which ensures the network exists and checks for `.env`):
+To deploy the stack locally using the development script (which loads `.env` and deploys to stack `cerberus_dev`):
 
 ```bash
 ./start_dev.sh
 ```
 
-### Production Deployment
+### Production Deployment (Swarm)
 
-The `start.sh` script handles pulling images, setting volume permissions, and starting the stack with production overrides:
+The `start.sh` script handles cleaning up old stacks and deploying the new one using production overrides:
 
 ```bash
 ./start.sh
 ```
 
-### Manual Execution (Minimal)
+### Manual Execution
 
+**Development:**
 ```bash
-docker network create aether-net || true
-docker compose up -d
+docker stack deploy --prune -c docker-compose.yml -c docker-compose.dev.yml cerberus_dev
+```
+
+**Production:**
+```bash
+docker stack deploy --prune -c docker-compose.yml -c docker-compose.prod.yml cerberus
 ```
 
 ## Integration with Traefik ("Olympus")
