@@ -1,14 +1,15 @@
-version: '3.8'
-
 networks:
   aether-net:
     external: true
   internal:
-    driver: bridge
+    driver: overlay
+    attachable: true
 
 services:
   authelia:
-    image: authelia/authelia:latest
+    image: cerberus-authelia:latest
+    build:
+      context: ./authelia
     container_name: authelia
     restart: unless-stopped
     user: "1000:1000"
@@ -20,32 +21,43 @@ services:
     environment:
       - TZ=UTC
       - DOMAIN_NAME=${DOMAIN_NAME}
-      - AUTHELIA_SUBDOMAIN=${AUTHELIA_SUBDOMAIN} # Required for configuration templates (ignore "not expected" warning)
-      - LLDAP_SUBDOMAIN=${LLDAP_SUBDOMAIN} # Required for configuration templates
+      - AUTHELIA_SUBDOMAIN=${AUTHELIA_SUBDOMAIN}
+      - LLDAP_SUBDOMAIN=${LLDAP_SUBDOMAIN}
       - LLDAP_LDAP_BASE_DN=${LLDAP_LDAP_BASE_DN}
       - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
       - X_AUTHELIA_CONFIG_FILTERS=template
-      # Secrets passed via environment variables
       - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${JWT_SECRET}
       - AUTHELIA_SESSION_SECRET=${SESSION_SECRET}
       - AUTHELIA_STORAGE_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - AUTHELIA_STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY}
       - SESSION_NAME=authelia_session
     depends_on:
-      - postgres
-      - redis
+      - authelia-postgres
+      - authelia-redis
       - lldap
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.authelia.rule=Host(`${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.authelia.entrypoints=websecure"
-      - "traefik.http.routers.authelia.tls=true"
-      - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}"
-      - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
-      - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
-      - "traefik.docker.network=aether-net"
-      
-  postgres:
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 15
+        window: 120s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.authelia.rule=Host(`${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.authelia.entrypoints=websecure"
+        - "traefik.http.routers.authelia.tls=true"
+        - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}"
+        - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
+        - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
+        - "traefik.http.services.authelia.loadbalancer.server.port=9091"
+        - "traefik.docker.network=aether-net"
+
+  authelia-postgres:
     image: postgres:15-alpine
     container_name: authelia-postgres
     restart: unless-stopped
@@ -57,8 +69,14 @@ services:
       - POSTGRES_USER=authelia
       - POSTGRES_DB=authelia
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
-  redis:
+  authelia-redis:
     image: redis:7-alpine
     container_name: authelia-redis
     restart: unless-stopped
@@ -67,6 +85,12 @@ services:
     networks:
       - internal
     command: redis-server --save 60 1 --loglevel warning
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
   lldap:
     image: lldap/lldap:latest
@@ -83,14 +107,26 @@ services:
       - LLDAP_KEY_SEED=${LLDAP_KEY_SEED}
       - LLDAP_LDAP_BASE_DN=${LLDAP_LDAP_BASE_DN}
       - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.lldap.rule=Host(`${LLDAP_SUBDOMAIN}.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.lldap.entrypoints=websecure"
-      - "traefik.http.routers.lldap.middlewares=authelia"
-      - "traefik.http.routers.lldap.tls=true"
-      - "traefik.http.services.lldap.loadbalancer.server.port=17170"
-      - "traefik.docker.network=aether-net"
+    healthcheck:
+      test: [ "CMD-SHELL", "netstat -an | grep 3890 > /dev/null; if [ 0 != $$? ]; then exit 1; fi;" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.lldap.rule=Host(`${LLDAP_SUBDOMAIN}.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.lldap.entrypoints=websecure"
+        - "traefik.http.routers.lldap.middlewares=authelia"
+        - "traefik.http.routers.lldap.tls=true"
+        - "traefik.http.services.lldap.loadbalancer.server.port=17170"
+        - "traefik.docker.network=aether-net"
 
 volumes:
   postgres_data:
