@@ -14,7 +14,9 @@ else
     exit 1
 fi
 
-STACK_NAME="cerberus_dev"
+export STACK_NAME="cerberus_dev"
+# Set project name so built images are labeled with the correct stack name
+export COMPOSE_PROJECT_NAME="${STACK_NAME}"
 
 echo "Removing existing ${STACK_NAME} stack..."
 docker stack rm ${STACK_NAME} || true

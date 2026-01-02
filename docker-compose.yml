@@ -11,8 +11,9 @@ services:
     build:
       context: .
       dockerfile: authelia/Dockerfile
-
     restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
     user: "1000:1000"
     networks:
       - aether-net
@@ -60,6 +61,8 @@ services:
     image: postgres:15-alpine
 
     restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -79,6 +82,8 @@ services:
     image: redis:7-alpine
 
     restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
     volumes:
       - redis_data:/data
     networks:
@@ -95,6 +100,8 @@ services:
     image: lldap/lldap:latest
 
     restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
     volumes:
       - lldap_data:/data
     networks:
