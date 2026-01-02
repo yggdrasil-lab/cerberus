@@ -9,12 +9,11 @@ services:
   authelia:
     image: cerberus-authelia:latest
     build:
-      context: ./authelia
+      context: .
+      dockerfile: authelia/Dockerfile
     container_name: authelia
     restart: unless-stopped
     user: "1000:1000"
-    volumes:
-      - ./config:/config
     networks:
       - aether-net
       - internal

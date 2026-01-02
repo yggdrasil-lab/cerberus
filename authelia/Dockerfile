@@ -1,7 +1,8 @@
 FROM authelia/authelia:latest
 
 # Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
+COPY authelia/entrypoint.sh /entrypoint.sh
+COPY config/configuration.yml /config/configuration.yml
 
 # Make sure entrypoint is executable
 RUN chmod +x /entrypoint.sh
