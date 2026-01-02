@@ -1,21 +1,30 @@
 #!/bin/bash
 set -e
 
-# 1. Pull latest images
-docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+# Environment variables are expected to be set in the shell/CI environment
 
-# 2. Create containers (initializes volumes without starting)
-docker compose -f docker-compose.yml -f docker-compose.prod.yml create
+echo "Removing existing Cerberus stack..."
+docker stack rm cerberus || true
 
-# 3. Copy configuration into the named volume via the container
-# We copy the *contents* of config/ into /config inside the container
-docker cp ./config/. authelia:/config/
+echo "Waiting for stack to be removed..."
+while docker service ls | grep -q "cerberus_"; do
+    echo "Stack services still active, waiting..."
+    sleep 2
+done
 
-# 4. Fix permissions inside the volume
-# We use a temporary alpine container mounting the volumes from 'authelia'
-# to chown the files to 1000:1000
-docker run --rm --volumes-from authelia alpine chown -R 1000:1000 /config
+echo "Waiting for network to be removed..."
+while docker network ls | grep -q "cerberus_internal"; do
+    echo "Stack network still active, waiting..."
+    sleep 2
+done
 
-# 5. Start the stack
-docker compose -f docker-compose.yml -f docker-compose.prod.yml down --remove-orphans
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
+echo "Building images..."
+docker compose build
+
+echo "Deploying Cerberus stack to Swarm (Production Mode)..."
+
+# Deploy the stack
+# --prune: Remove services that are no longer referenced in the compose file
+docker stack deploy --prune -c docker-compose.yml -c docker-compose.prod.yml cerberus
+
+echo "Deployment command submitted. Check status with: docker stack services cerberus"
