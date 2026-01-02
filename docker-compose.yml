@@ -11,7 +11,7 @@ services:
     build:
       context: .
       dockerfile: authelia/Dockerfile
-    container_name: authelia
+
     restart: unless-stopped
     user: "1000:1000"
     networks:
@@ -58,7 +58,7 @@ services:
 
   authelia-postgres:
     image: postgres:15-alpine
-    container_name: authelia-postgres
+
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -77,7 +77,7 @@ services:
 
   authelia-redis:
     image: redis:7-alpine
-    container_name: authelia-redis
+
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -93,7 +93,7 @@ services:
 
   lldap:
     image: lldap/lldap:latest
-    container_name: lldap
+
     restart: unless-stopped
     volumes:
       - lldap_data:/data
@@ -106,6 +106,7 @@ services:
       - LLDAP_KEY_SEED=${LLDAP_KEY_SEED}
       - LLDAP_LDAP_BASE_DN=${LLDAP_LDAP_BASE_DN}
       - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
+      - LLDAP_LDAP_USER_EMAIL=${LLDAP_LDAP_USER_EMAIL}
     healthcheck:
       test: [ "CMD-SHELL", "netstat -an | grep 3890 > /dev/null; if [ 0 != $$? ]; then exit 1; fi;" ]
       interval: 10s

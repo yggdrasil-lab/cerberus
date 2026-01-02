@@ -23,7 +23,6 @@ echo "Waiting for stack to be removed..."
 while docker service ls | grep -q "${STACK_NAME}_"; do
     echo "Stack services still active, waiting..."
     sleep 2
-    sleep 2
 done
 
 echo "Waiting for network to be removed..."
