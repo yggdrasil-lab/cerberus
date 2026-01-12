@@ -143,7 +143,7 @@ services:
       - "com.docker.compose.project=${STACK_NAME}"
     environment:
       - DOMAIN=https://vault.${DOMAIN_NAME}
-      - SIGNUPS_ALLOWED=true # Temporarily true for initial setup
+      - SIGNUPS_ALLOWED=false # Signups disabled after initial setup
       - WEBSOCKET_ENABLED=true
       - ROCKET_WORKERS=10
     volumes:
