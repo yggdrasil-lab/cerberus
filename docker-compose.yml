@@ -173,9 +173,12 @@ services:
       - DATA_DIR=/data
       - TZ=Pacific/Auckland
       - CRON_SCHEDULE=0 3 * * * # 3 AM Daily
-      - BACKUP_DIR=/backup
       - KEEP_BACKUP_DAYS=30
-      - RCLONE_ENABLED=false
+      # Rclone "Local" Remote Configuration (Bypass)
+      - RCLONE_CONFIG_LOCAL_TYPE=local
+      - RCLONE_REMOTE_NAME=local
+      - RCLONE_DESTINATION=/backup
+      - ATTACHMENT_ENABLE=true
     volumes:
       - /opt/cerberus/vaultwarden:/data:ro # Read-only access to DB
       - /mnt/storage/backups/vaultwarden:/backup # Shared volume with Charon
