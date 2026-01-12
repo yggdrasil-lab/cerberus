@@ -172,10 +172,10 @@ services:
     environment:
       - DATA_DIR=/data
       - TZ=Pacific/Auckland
-      - CRON_SCHEDULE=0 3 * * * # 3 AM Daily
-      - KEEP_BACKUP_DAYS=30
+      - CRON=0 3 * * * # 3 AM Daily
+      - BACKUP_KEEP_DAYS=30
       - RCLONE_REMOTE_NAME=local
-      - BACKUP_DIR=/backup
+      - RCLONE_REMOTE_DIR=/backup
       - ATTACHMENT_ENABLE=true
     volumes:
       - /opt/cerberus/vaultwarden:/data:ro # Read-only access to DB
