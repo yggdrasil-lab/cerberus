@@ -175,6 +175,7 @@ services:
       - CRON_SCHEDULE=0 3 * * * # 3 AM Daily
       - BACKUP_DIR=/backup
       - KEEP_BACKUP_DAYS=30
+      - RCLONE_ENABLED=false
     volumes:
       - /opt/cerberus/vaultwarden:/data:ro # Read-only access to DB
       - /mnt/storage/backups/vaultwarden:/backup # Shared volume with Charon
