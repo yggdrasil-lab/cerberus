@@ -135,6 +135,52 @@ services:
         - "traefik.http.services.lldap.loadbalancer.server.port=17170"
         - "traefik.docker.network=aether-net"
 
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    environment:
+      - DOMAIN=https://vault.${DOMAIN_NAME}
+      - SIGNUPS_ALLOWED=true # Temporarily true for initial setup
+      - WEBSOCKET_ENABLED=true
+      - ROCKET_WORKERS=10
+    volumes:
+      - /opt/cerberus/vaultwarden:/data
+    networks:
+      - aether-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [ "node.hostname == muspelheim" ]
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.vaultwarden.rule=Host(`vault.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.vaultwarden.entrypoints=websecure"
+        - "traefik.http.routers.vaultwarden.tls=true"
+        - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
+        - "traefik.docker.network=aether-net"
+
+  vaultwarden-backup:
+    image: ttionya/vaultwarden-backup:latest
+    container_name: vaultwarden-backup
+    restart: always
+    environment:
+      - TZ=Pacific/Auckland
+      - CRON_SCHEDULE=0 3 * * * # 3 AM Daily
+      - BACKUP_DIR=/backup
+      - KEEP_BACKUP_DAYS=30
+    volumes:
+      - /opt/cerberus/vaultwarden:/data:ro # Read-only access to DB
+      - /mnt/storage/backups/vaultwarden:/backup # Shared volume with Charon
+    depends_on:
+      - vaultwarden
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [ "node.hostname == muspelheim" ]
+
 volumes:
   postgres_data:
   redis_data:
