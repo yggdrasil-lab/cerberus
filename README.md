@@ -126,6 +126,21 @@ Vaultwarden is configured to host your passwords and secure notes.
 3.  **Login:** Use the email and master password you created.
 4.  **2FA:** It is highly recommended to setup TOTP or FIDO2 key immediately within the Vaultwarden settings.
 
+### 6. Backup & Recovery
+
+**Strategy:**
+*   **Producer:** The `vaultwarden-backup` sidecar dumps an encrypted ZIP of the database + attachments daily at 3 AM.
+*   **Location:** `/mnt/storage/backups/vaultwarden/` on Muspelheim.
+*   **Encryption:** Backups are ZIP encrypted.
+    *   **Default Password:** `WHEREISMYPASSWORD?` (Change this via `ZIP_PASSWORD` env var if desired).
+
+**Restoration Steps:**
+1.  **Stop Services:** `docker service scale cerberus_vaultwarden=0`
+2.  **Locate Backup:** Find the latest zip in `/mnt/storage/backups/vaultwarden/`.
+3.  **Extract:** Unzip using the password.
+4.  **Restore:** Replace the contents of `/opt/cerberus/vaultwarden/` with the extracted data.
+5.  **Restart:** `docker service scale cerberus_vaultwarden=1`
+
 ## Execution
 
 ### Local Development (Swarm)
