@@ -18,6 +18,7 @@ I am the first and final defense of your digital empire. My mission is to provid
 
 *   **Authelia**: The core identity provider and SSO engine.
 *   **LLDAP**: Lightweight LDAP server for user management.
+*   **Vaultwarden**: Self-hosted password manager (Bitwarden compatible).
 *   **PostgreSQL**: Persistent storage for user preferences and OIDC tokens.
 *   **Redis**: High-speed session storage.
 *   **Traefik**: The reverse proxy that integrates with my `forward-auth` middleware.
@@ -28,8 +29,9 @@ Cerberus operates through the following components:
 
 1.  **Identity Engine (Authelia)**: Processes logins, manages 2FA, and issues session cookies.
 2.  **User Directory (LLDAP)**: Stores identities and groups.
-3.  **Forward-Auth Middleware**: Intercepts requests at the Traefik level, redirecting unauthenticated souls to the login portal.
-4.  **Self-Hosted Runner**: CI/CD pipeline runs directly on the infrastructure via GitHub Actions.
+3.  **Secrets Management (Vaultwarden)**: Secure storage for passwords and notes.
+4.  **Forward-Auth Middleware**: Intercepts requests at the Traefik level, redirecting unauthenticated souls to the login portal.
+5.  **Self-Hosted Runner**: CI/CD pipeline runs directly on the infrastructure via GitHub Actions.
 
 ## Prerequisites
 
@@ -50,6 +52,7 @@ cerberus/
 ├── config/
 │   ├── configuration.yml    # Main Authelia config
 ├── .env.example             # Template for environment variables
+├── setup_host.sh            # Host preparation script (One-time run)
 ├── start_dev.sh             # Local development startup script (Swarm)
 ├── start.sh                 # Production deployment script (Swarm, used by CI/CD)
 ├── docker-compose.yml       # Base configuration
@@ -66,7 +69,16 @@ git clone <your-repository-url> cerberus
 cd cerberus
 ```
 
-### 2. Configuration
+### 2. Host Preparation
+
+Run the setup script **once** to create the required directories on the host:
+
+```bash
+chmod +x setup_host.sh
+./setup_host.sh
+```
+
+### 3. Configuration
 
 **Environment Variables:**
 You must create a `.env` file from `.env.example`. This file is **mandatory** for local development.
@@ -80,7 +92,7 @@ Required variables:
 - `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings for Authelia.
 - `LLDAP_JWT_SECRET`, `LLDAP_KEY_SEED`, `LLDAP_LDAP_USER_PASS`: Secrets for LLDAP.
 
-### 3. User Management (LLDAP)
+### 4. User Management (LLDAP)
 
 - Access the LLDAP dashboard at `https://ldap.<your-domain>`.
 - **Default Admin**: `admin`.
@@ -94,6 +106,26 @@ Required variables:
 > 2.  **LLDAP**: A second login screen for the LLDAP internal admin interface.
 > This is a known limitation as LLDAP does not widely support header-based authentication for its web UI.
 
+### 5. Secrets Management (Vaultwarden)
+
+Vaultwarden is configured to host your passwords and secure notes.
+
+**Initial Setup (Account Creation):**
+1.  **Enable Signups:** In `docker-compose.yml`, ensure `SIGNUPS_ALLOWED=true`.
+2.  **Deploy:** Deploy the stack (`./start.sh`).
+3.  **Register:** Navigate to `https://vault.<your-domain>` and create your **Primary Account**.
+4.  **Disable Signups (CRITICAL):**
+    *   Edit `docker-compose.yml` and set `SIGNUPS_ALLOWED=false`.
+    *   Redeploy (`./start.sh`) to lock the gates.
+    *   Future users can only be invited by the admin.
+
+**Client Setup (Mobile/Desktop):**
+1.  Download the **Bitwarden** app (iOS/Android/Desktop).
+2.  **Server URL:** Before logging in, tap the **Settings/Gear icon**.
+    *   Enter your Self-Hosted URL: `https://vault.<your-domain>`
+3.  **Login:** Use the email and master password you created.
+4.  **2FA:** It is highly recommended to setup TOTP or FIDO2 key immediately within the Vaultwarden settings.
+
 ## Execution
 
 ### Local Development (Swarm)
@@ -106,7 +138,7 @@ To deploy the stack locally using the development script (which loads `.env` and
 
 ### Production Deployment (Swarm)
 
-The `start.sh` script handles cleaning up old stacks and deploying the new one using production overrides:
+The `start.sh` script handles cleaning up old stacks and deploying the new one using production overrides. **Ensure you have run `./setup_host.sh` at least once before deploying.**
 
 ```bash
 ./start.sh
