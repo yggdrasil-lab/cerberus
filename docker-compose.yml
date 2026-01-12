@@ -139,6 +139,8 @@ services:
     image: vaultwarden/server:latest
     container_name: vaultwarden
     restart: always
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
     environment:
       - DOMAIN=https://vault.${DOMAIN_NAME}
       - SIGNUPS_ALLOWED=true # Temporarily true for initial setup
@@ -165,7 +167,10 @@ services:
     image: ttionya/vaultwarden-backup:latest
     container_name: vaultwarden-backup
     restart: always
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
     environment:
+      - DATA_DIR=/data
       - TZ=Pacific/Auckland
       - CRON_SCHEDULE=0 3 * * * # 3 AM Daily
       - BACKUP_DIR=/backup

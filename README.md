@@ -71,7 +71,7 @@ cd cerberus
 
 ### 2. Host Preparation
 
-Run the setup script **once** to create the required directories on the host:
+Run the setup script **once** on the target node (e.g., **Muspelheim**) to create the required directories on the host:
 
 ```bash
 chmod +x setup_host.sh
