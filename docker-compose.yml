@@ -174,14 +174,15 @@ services:
       - TZ=Pacific/Auckland
       - CRON_SCHEDULE=0 3 * * * # 3 AM Daily
       - KEEP_BACKUP_DAYS=30
-      # Rclone "Local" Remote Configuration (Bypass)
-      - RCLONE_CONFIG_LOCAL_TYPE=local
       - RCLONE_REMOTE_NAME=local
-      - RCLONE_DESTINATION=/backup
+      - BACKUP_DIR=/backup
       - ATTACHMENT_ENABLE=true
     volumes:
       - /opt/cerberus/vaultwarden:/data:ro # Read-only access to DB
       - /mnt/storage/backups/vaultwarden:/backup # Shared volume with Charon
+    configs:
+      - source: vaultwarden_rclone_config
+        target: /config/rclone/rclone.conf
     depends_on:
       - vaultwarden
     deploy:
@@ -194,3 +195,7 @@ volumes:
   postgres_data:
   redis_data:
   lldap_data:
+
+configs:
+  vaultwarden_rclone_config:
+    file: ./config/vaultwarden-backup/rclone.conf
