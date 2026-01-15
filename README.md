@@ -86,8 +86,6 @@ cp .env.example .env
 ```
 Required variables:
 - `DOMAIN_NAME`: Your main domain (e.g., `yourdomain.com`).
-- `AUTHELIA_SUBDOMAIN`: Subdomain for the auth portal (e.g., `auth`).
-- `LLDAP_SUBDOMAIN`: Subdomain for the LLDAP management portal (e.g., `ldap`).
 - `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings for Authelia.
 - `LLDAP_JWT_SECRET`, `LLDAP_KEY_SEED`, `LLDAP_LDAP_USER_PASS`: Secrets for LLDAP.
 
@@ -194,4 +192,3 @@ The project uses a `deploy.yml` workflow running on a self-hosted runner.
 
 **Required Repository Variables:**
 - `DOMAIN_NAME`
-- `AUTHELIA_SUBDOMAIN`

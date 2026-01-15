@@ -17,8 +17,6 @@ jobs:
         env:
           # Domain Variables
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
-          AUTHELIA_SUBDOMAIN: ${{ vars.AUTHELIA_SUBDOMAIN }}
-          LLDAP_SUBDOMAIN: ${{ vars.LLDAP_SUBDOMAIN }}
           LLDAP_LDAP_BASE_DN: ${{ vars.LLDAP_LDAP_BASE_DN }}
           
           # Secrets
