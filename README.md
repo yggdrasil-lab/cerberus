@@ -22,6 +22,7 @@ I am the first and final defense of your digital empire. My mission is to provid
 *   **PostgreSQL**: Persistent storage for user preferences and OIDC tokens.
 *   **Redis**: High-speed session storage.
 *   **Traefik**: The reverse proxy that integrates with my `forward-auth` middleware.
+*   **Hermes**: (External) Simple SMTP relay for sending emails from Authelia and Vaultwarden.
 
 ## Architecture
 
