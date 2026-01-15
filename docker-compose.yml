@@ -21,8 +21,6 @@ services:
     environment:
       - TZ=UTC
       - DOMAIN_NAME=${DOMAIN_NAME}
-      - AUTHELIA_SUBDOMAIN=${AUTHELIA_SUBDOMAIN}
-      - LLDAP_SUBDOMAIN=${LLDAP_SUBDOMAIN}
       - LLDAP_LDAP_BASE_DN=${LLDAP_LDAP_BASE_DN}
       - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
       - X_AUTHELIA_CONFIG_FILTERS=template
@@ -48,10 +46,10 @@ services:
         window: 120s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.authelia.rule=Host(`${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.authelia.rule=Host(`auth.${DOMAIN_NAME}`)"
         - "traefik.http.routers.authelia.entrypoints=websecure"
         - "traefik.http.routers.authelia.tls=true"
-        - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://${AUTHELIA_SUBDOMAIN}.${DOMAIN_NAME}"
+        - "traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://auth.${DOMAIN_NAME}"
         - "traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true"
         - "traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email"
         - "traefik.http.services.authelia.loadbalancer.server.port=9091"
@@ -128,7 +126,7 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.lldap.rule=Host(`${LLDAP_SUBDOMAIN}.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.lldap.rule=Host(`ldap.${DOMAIN_NAME}`)"
         - "traefik.http.routers.lldap.entrypoints=websecure"
         - "traefik.http.routers.lldap.middlewares=authelia"
         - "traefik.http.routers.lldap.tls=true"
