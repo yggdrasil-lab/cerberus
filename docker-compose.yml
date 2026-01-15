@@ -5,6 +5,32 @@ networks:
     driver: overlay
     attachable: true
 
+secrets:
+  cerberus_jwt_secret:
+    external: true
+    name: ${JWT_SECRET_NAME}
+  cerberus_session_secret:
+    external: true
+    name: ${SESSION_SECRET_NAME}
+  cerberus_storage_encryption_key:
+    external: true
+    name: ${STORAGE_ENCRYPTION_KEY_NAME}
+  cerberus_postgres_password:
+    external: true
+    name: ${POSTGRES_PASSWORD_NAME}
+  cerberus_lldap_jwt_secret:
+    external: true
+    name: ${LLDAP_JWT_SECRET_NAME}
+  cerberus_lldap_key_seed:
+    external: true
+    name: ${LLDAP_KEY_SEED_NAME}
+  cerberus_lldap_user_pass:
+    external: true
+    name: ${LLDAP_LDAP_USER_PASS_NAME}
+  cerberus_vw_admin_token:
+    external: true
+    name: ${VW_ADMIN_TOKEN_NAME}
+
 services:
   authelia:
     image: cerberus-authelia:latest
@@ -22,13 +48,19 @@ services:
       - TZ=UTC
       - DOMAIN_NAME=${DOMAIN_NAME}
       - LLDAP_LDAP_BASE_DN=${LLDAP_LDAP_BASE_DN}
-      - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
+      - LLDAP_LDAP_USER_PASS_FILE=/run/secrets/cerberus_lldap_user_pass
       - X_AUTHELIA_CONFIG_FILTERS=template
-      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${JWT_SECRET}
-      - AUTHELIA_SESSION_SECRET=${SESSION_SECRET}
-      - AUTHELIA_STORAGE_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - AUTHELIA_STORAGE_ENCRYPTION_KEY=${STORAGE_ENCRYPTION_KEY}
+      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/cerberus_jwt_secret
+      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/cerberus_session_secret
+      - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/cerberus_postgres_password
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/cerberus_storage_encryption_key
       - SESSION_NAME=authelia_session
+    secrets:
+      - cerberus_jwt_secret
+      - cerberus_session_secret
+      - cerberus_storage_encryption_key
+      - cerberus_postgres_password
+      - cerberus_lldap_user_pass
     depends_on:
       - authelia-postgres
       - authelia-redis
@@ -68,7 +100,9 @@ services:
     environment:
       - POSTGRES_USER=authelia
       - POSTGRES_DB=authelia
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/cerberus_postgres_password
+    secrets:
+      - cerberus_postgres_password
     deploy:
       mode: replicated
       replicas: 1
@@ -107,11 +141,15 @@ services:
       - aether-net
     environment:
       - TZ=UTC
-      - LLDAP_JWT_SECRET=${LLDAP_JWT_SECRET}
-      - LLDAP_KEY_SEED=${LLDAP_KEY_SEED}
+      - LLDAP_JWT_SECRET_FILE=/run/secrets/cerberus_lldap_jwt_secret
+      - LLDAP_KEY_SEED_FILE=/run/secrets/cerberus_lldap_key_seed
       - LLDAP_LDAP_BASE_DN=${LLDAP_LDAP_BASE_DN}
-      - LLDAP_LDAP_USER_PASS=${LLDAP_LDAP_USER_PASS}
+      - LLDAP_LDAP_USER_PASS_FILE=/run/secrets/cerberus_lldap_user_pass
       - LLDAP_LDAP_USER_EMAIL=${LLDAP_LDAP_USER_EMAIL}
+    secrets:
+      - cerberus_lldap_jwt_secret
+      - cerberus_lldap_key_seed
+      - cerberus_lldap_user_pass
     healthcheck:
       test: [ "CMD-SHELL", "netstat -an | grep 3890 > /dev/null; if [ 0 != $$? ]; then exit 1; fi;" ]
       interval: 10s
@@ -144,6 +182,9 @@ services:
       - SIGNUPS_ALLOWED=false # Signups disabled after initial setup
       - WEBSOCKET_ENABLED=true
       - ROCKET_WORKERS=10
+      - ADMIN_TOKEN_FILE=/run/secrets/cerberus_vw_admin_token
+    secrets:
+      - cerberus_vw_admin_token
     volumes:
       - /opt/cerberus/vaultwarden:/data
     networks:

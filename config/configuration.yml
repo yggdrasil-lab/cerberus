@@ -27,7 +27,7 @@ authentication_backend:
     additional_groups_dn: ou=groups
     groups_filter: (member={dn})
     user: uid=admin,ou=people,{{ env "LLDAP_LDAP_BASE_DN" }}
-    password: '{{ env "LLDAP_LDAP_USER_PASS" }}'
+    password: '{{ secret "/run/secrets/cerberus_lldap_user_pass" }}'
     attributes:
       display_name: displayName
       group_name: cn
