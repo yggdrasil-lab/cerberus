@@ -13,13 +13,9 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Deploy Stack
+      - name: Setup Secrets
         env:
-          # Domain Variables
-          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
-          LLDAP_LDAP_BASE_DN: ${{ vars.LLDAP_LDAP_BASE_DN }}
-          
-          # Secrets
+          # Secrets needed for generation
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
@@ -27,6 +23,29 @@ jobs:
           LLDAP_JWT_SECRET: ${{ secrets.LLDAP_JWT_SECRET }}
           LLDAP_KEY_SEED: ${{ secrets.LLDAP_KEY_SEED }}
           LLDAP_LDAP_USER_PASS: ${{ secrets.LLDAP_LDAP_USER_PASS }}
+          VW_ADMIN_TOKEN: ${{ secrets.VW_ADMIN_TOKEN }}
+        run: |
+          chmod +x scripts/ensure_secret.sh
+          
+          # Authelia Secrets
+          echo "JWT_SECRET_NAME=$(echo "$JWT_SECRET" | ./scripts/ensure_secret.sh cerberus_jwt_secret)" >> $GITHUB_ENV
+          echo "SESSION_SECRET_NAME=$(echo "$SESSION_SECRET" | ./scripts/ensure_secret.sh cerberus_session_secret)" >> $GITHUB_ENV
+          echo "STORAGE_ENCRYPTION_KEY_NAME=$(echo "$STORAGE_ENCRYPTION_KEY" | ./scripts/ensure_secret.sh cerberus_storage_encryption_key)" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD_NAME=$(echo "$POSTGRES_PASSWORD" | ./scripts/ensure_secret.sh cerberus_postgres_password)" >> $GITHUB_ENV
+          
+          # LLDAP Secrets
+          echo "LLDAP_JWT_SECRET_NAME=$(echo "$LLDAP_JWT_SECRET" | ./scripts/ensure_secret.sh cerberus_lldap_jwt_secret)" >> $GITHUB_ENV
+          echo "LLDAP_KEY_SEED_NAME=$(echo "$LLDAP_KEY_SEED" | ./scripts/ensure_secret.sh cerberus_lldap_key_seed)" >> $GITHUB_ENV
+          echo "LLDAP_LDAP_USER_PASS_NAME=$(echo "$LLDAP_LDAP_USER_PASS" | ./scripts/ensure_secret.sh cerberus_lldap_user_pass)" >> $GITHUB_ENV
+          
+          # Vaultwarden Secrets
+          echo "VW_ADMIN_TOKEN_NAME=$(echo "$VW_ADMIN_TOKEN" | ./scripts/ensure_secret.sh cerberus_vw_admin_token)" >> $GITHUB_ENV
+
+      - name: Deploy Stack
+        env:
+          # Domain Variables
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          LLDAP_LDAP_BASE_DN: ${{ vars.LLDAP_LDAP_BASE_DN }}
           LLDAP_LDAP_USER_EMAIL: ${{ secrets.ADMIN_EMAIL }}
         run: |
           chmod +x scripts/deploy.sh

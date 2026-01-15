@@ -79,15 +79,19 @@ chmod +x setup_host.sh
 
 ### 3. Configuration
 
-**Environment Variables:**
-You must create a `.env` file from `.env.example`. This file is **mandatory** for local development.
+**Environment Variables (.env):**
+Create a `.env` file from `.env.example`. 
+> [!IMPORTANT]
+> In this new architecture, variables defined here are used to **generate Immutable Docker Secrets** during deployment. The services themselves read these secrets from files (e.g., `/run/secrets/xxx`), not directly from environment variables.
+
 ```bash
 cp .env.example .env
 ```
 Required variables:
 - `DOMAIN_NAME`: Your main domain (e.g., `yourdomain.com`).
-- `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Generated random strings for Authelia.
+- `JWT_SECRET`, `SESSION_SECRET`, `POSTGRES_PASSWORD`, `STORAGE_ENCRYPTION_KEY`: Secrets for Authelia.
 - `LLDAP_JWT_SECRET`, `LLDAP_KEY_SEED`, `LLDAP_LDAP_USER_PASS`: Secrets for LLDAP.
+- `VW_ADMIN_TOKEN`: Argon2 hash for the Vaultwarden Admin Panel (generated via instructions below).
 
 ### 4. User Management (LLDAP)
 
@@ -106,6 +110,17 @@ Required variables:
 ### 5. Secrets Management (Vaultwarden)
 
 Vaultwarden is configured to host your passwords and secure notes.
+
+**Admin Panel & Token Generation:**
+To enable the `/admin` interface, you must configure the `ADMIN_TOKEN`. We store this securely as a Docker Secret.
+
+1.  **Generate Password:** Create a strong, unique password (e.g., using Bitwarden's generator).
+2.  **Generate Hash:** Run the following command to hash it using Argon2:
+    ```bash
+    docker run --rm -it vaultwarden/server /vaultwarden hash
+    ```
+3.  **Input:** Paste your password when prompted (it will be hidden).
+4.  **Save:** Copy the resulting string (starting with `$argon2...`). This is the value used for the secret.
 
 **Initial Setup (Account Creation):**
 1.  **Enable Signups:** In `docker-compose.yml`, ensure `SIGNUPS_ALLOWED=true`.
@@ -182,6 +197,7 @@ labels:
 The project uses a `deploy.yml` workflow running on a self-hosted runner.
 
 **Required Repository Secrets:**
+These are injected as environment variables into the runner, which then uses them to generate versioned Docker Secrets.
 - `JWT_SECRET`
 - `SESSION_SECRET`
 - `POSTGRES_PASSWORD`
@@ -189,6 +205,7 @@ The project uses a `deploy.yml` workflow running on a self-hosted runner.
 - `LLDAP_JWT_SECRET`
 - `LLDAP_KEY_SEED`
 - `LLDAP_LDAP_USER_PASS`
+- `VW_ADMIN_TOKEN` # Argon2 hash of the admin password
 
 **Required Repository Variables:**
 - `DOMAIN_NAME`
