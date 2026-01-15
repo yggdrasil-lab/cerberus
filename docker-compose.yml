@@ -183,6 +183,11 @@ services:
       - WEBSOCKET_ENABLED=true
       - ROCKET_WORKERS=10
       - ADMIN_TOKEN_FILE=/run/secrets/cerberus_vw_admin_token
+      - SMTP_HOST=hermes
+      - SMTP_FROM=cerberus@${DOMAIN_NAME}
+      - SMTP_PORT=2525
+      - SMTP_SECURITY=off
+      - SMTP_AUTH_MECHANISM=none
     secrets:
       - cerberus_vw_admin_token
     volumes:
