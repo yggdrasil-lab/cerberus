@@ -36,14 +36,7 @@ Cerberus operates through the following components:
 
 ## Prerequisites
 
-- **Docker Swarm**: The host must be in Swarm mode.
-    ```bash
-    docker swarm init
-    ```
-- **Network**: `aether-net` must exist as an overlay network (created by your Traefik stack).
-    ```bash
-    docker network create --driver overlay --attachable aether-net || true
-    ```
+- **Platform Setup**: Swarm and Network must be initialized (see `Forge/yggdrasil-os`).
 
 ## Directory Structure
 
