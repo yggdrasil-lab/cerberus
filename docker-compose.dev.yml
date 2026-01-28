@@ -1,9 +1,0 @@
-services:
-  authelia:
-    environment:
-      - AUTHELIA_LOG_LEVEL=debug
-      - SESSION_NAME=authelia_session_dev
-
-  lldap:
-    ports:
-      - "17170:17170"

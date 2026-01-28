@@ -47,10 +47,8 @@ cerberus/
 │   ├── configuration.yml    # Main Authelia config
 ├── .env.example             # Template for environment variables
 ├── setup_host.sh            # Host preparation script (One-time run)
-├── start_dev.sh             # Local development startup script (Swarm)
+├── setup_host.sh            # Host preparation script (One-time run)
 ├── docker-compose.yml       # Base configuration
-├── docker-compose.prod.yml  # Production overrides (placement constraints, etc)
-└── docker-compose.dev.yml   # Development overrides (ports, logging)
 ```
 
 ## Setup Instructions
@@ -118,11 +116,11 @@ To enable the `/admin` interface, you must configure the `ADMIN_TOKEN`. We store
 
 **Initial Setup (Account Creation):**
 1.  **Enable Signups:** In `docker-compose.yml`, ensure `SIGNUPS_ALLOWED=true`.
-2.  **Deploy:** Deploy the stack (`./scripts/deploy.sh "cerberus" docker-compose.yml docker-compose.prod.yml`).
+2.  **Deploy:** Deploy the stack (`./scripts/deploy.sh "cerberus" docker-compose.yml`).
 3.  **Register:** Navigate to `https://vault.<your-domain>` and create your **Primary Account**.
 4.  **Disable Signups (CRITICAL):**
     *   Edit `docker-compose.yml` and set `SIGNUPS_ALLOWED=false`.
-    *   Redeploy (`./scripts/deploy.sh "cerberus" docker-compose.yml docker-compose.prod.yml`) to lock the gates.
+    *   Redeploy (`./scripts/deploy.sh "cerberus" docker-compose.yml`) to lock the gates.
     *   Future users can only be invited by the admin.
 
 **Client Setup (Mobile/Desktop):**
@@ -149,32 +147,18 @@ To enable the `/admin` interface, you must configure the `ADMIN_TOKEN`. We store
 
 ## Execution
 
-### Local Development (Swarm)
-
-To deploy the stack locally using the development script (which loads `.env` and deploys to stack `cerberus_dev`):
-
-```bash
-./start_dev.sh
-```
-
-### Production Deployment (Swarm)
+### Deployment (Swarm)
 
 The deployment pipeline relies on the standardized `ops-scripts` submodule. **Ensure you have run `./setup_host.sh` at least once before deploying.**
 
 ```bash
-./scripts/deploy.sh "cerberus" docker-compose.yml docker-compose.prod.yml
+./scripts/deploy.sh "cerberus"
 ```
 
 ### Manual Execution
 
-**Development:**
 ```bash
-docker stack deploy --prune -c docker-compose.yml -c docker-compose.dev.yml cerberus_dev
-```
-
-**Production:**
-```bash
-docker stack deploy --prune -c docker-compose.yml -c docker-compose.prod.yml cerberus
+docker stack deploy --prune -c docker-compose.yml cerberus
 ```
 
 ## Integration with Traefik ("Olympus")

@@ -49,4 +49,4 @@ jobs:
           LLDAP_LDAP_USER_EMAIL: ${{ secrets.ADMIN_EMAIL }}
         run: |
           chmod +x scripts/deploy.sh
-          ./scripts/deploy.sh "cerberus" docker-compose.yml docker-compose.prod.yml
+          ./scripts/deploy.sh "cerberus" docker-compose.yml
