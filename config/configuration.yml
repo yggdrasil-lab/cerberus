@@ -106,7 +106,7 @@ identity_providers:
         public: false
         authorization_policy: two_factor
         redirect_uris:
-          - 'https://portainer.{{ env "DOMAIN_NAME" }}/login/oauth/o/authelia/callback'
+          - 'https://portainer.{{ env "DOMAIN_NAME" }}/'
         scopes:
           - openid
           - profile
