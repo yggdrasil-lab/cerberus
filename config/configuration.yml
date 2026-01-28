@@ -83,3 +83,27 @@ regulation:
   max_retries: 3
   find_time: 120
   ban_time: 300
+
+identity_providers:
+  oidc:
+    hmac_secret: '{{ secret "/run/secrets/cerberus_jwt_secret" }}' # Use the same JWT secret for HMAC
+    issuer_private_key: '{{ secret "/run/secrets/cerberus_oidc_key" }}'
+    access_token_lifespan: 1h
+    authorize_code_lifespan: 1m
+    id_token_lifespan: 1h
+    refresh_token_lifespan: 90m
+    enable_client_debug_messages: false
+    clients:
+      - client_id: portainer
+        client_name: Portainer
+        client_secret: '{{ secret "/run/secrets/cerberus_portainer_client_secret" }}'
+        public: false
+        authorization_policy: two_factor
+        redirect_uris:
+          - 'https://portainer.{{ env "DOMAIN_NAME" }}/login/oauth/o/authelia/callback'
+        scopes:
+          - openid
+          - profile
+          - groups
+          - email
+        userinfo_signing_algorithm: none

@@ -1,5 +1,0 @@
-services:
-  authelia:
-    environment:
-      # Explicitly empty or just commenting out to show where prod-specific env vars would go if not in .env
-      []

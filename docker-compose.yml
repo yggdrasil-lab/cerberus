@@ -30,6 +30,12 @@ secrets:
   cerberus_vw_admin_token:
     external: true
     name: ${VW_ADMIN_TOKEN_NAME}
+  cerberus_oidc_key:
+    external: true
+    name: ${OIDC_PRIVATE_KEY_NAME}
+  cerberus_portainer_client_secret:
+    external: true
+    name: ${OIDC_PORTAINER_CLIENT_SECRET_NAME}
 
 services:
   authelia:
@@ -61,6 +67,8 @@ services:
       - cerberus_storage_encryption_key
       - cerberus_postgres_password
       - cerberus_lldap_user_pass
+      - cerberus_oidc_key
+      - cerberus_portainer_client_secret
     depends_on:
       - authelia-postgres
       - authelia-redis
