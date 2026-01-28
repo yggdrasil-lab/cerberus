@@ -91,7 +91,8 @@ identity_providers:
       - key_id: 'default'
         algorithm: 'RS256'
         use: 'sig'
-        key: '{{ secret "/run/secrets/cerberus_oidc_key" }}'
+        key: |
+          {{ secret "/run/secrets/cerberus_oidc_key" | replace "\n" "\n          " }}
     lifespans:
       access_token: 1h
       authorize_code: 1m
