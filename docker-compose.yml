@@ -33,6 +33,9 @@ secrets:
   cerberus_oidc_key:
     external: true
     name: ${OIDC_PRIVATE_KEY_NAME}
+  cerberus_portainer_client_secret:
+    external: true
+    name: ${OIDC_PORTAINER_CLIENT_SECRET_NAME}
 
 services:
   authelia:
@@ -57,7 +60,6 @@ services:
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/cerberus_session_secret
       - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/cerberus_postgres_password
       - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/cerberus_storage_encryption_key
-      - AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE=/run/secrets/cerberus_oidc_key
       - SESSION_NAME=authelia_session
     secrets:
       - cerberus_jwt_secret
@@ -66,6 +68,7 @@ services:
       - cerberus_postgres_password
       - cerberus_lldap_user_pass
       - cerberus_oidc_key
+      - cerberus_portainer_client_secret
     depends_on:
       - authelia-postgres
       - authelia-redis

@@ -96,7 +96,7 @@ identity_providers:
     clients:
       - client_id: portainer
         client_name: Portainer
-        client_secret: '$pbkdf2-sha512$310000$NYl/xJbHh9bc.8/4aLg4ww$o7LzQHH.xNWW72UvN57tWv8Dy90SxOFs693Sinm7AXNhFe.mfRycOo.ym6X4YN306FnsP.oy4jdYrRn.Y8IJdQ'
+        client_secret: '{{ secret "/run/secrets/cerberus_portainer_client_secret" }}'
         public: false
         authorization_policy: two_factor
         redirect_uris:
