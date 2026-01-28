@@ -24,6 +24,7 @@ jobs:
           LLDAP_KEY_SEED: ${{ secrets.LLDAP_KEY_SEED }}
           LLDAP_LDAP_USER_PASS: ${{ secrets.LLDAP_LDAP_USER_PASS }}
           VW_ADMIN_TOKEN: ${{ secrets.VW_ADMIN_TOKEN }}
+          OIDC_PRIVATE_KEY: ${{ secrets.OIDC_PRIVATE_KEY }}
         run: |
           chmod +x scripts/ensure_secret.sh
           
@@ -40,6 +41,9 @@ jobs:
           
           # Vaultwarden Secrets
           echo "VW_ADMIN_TOKEN_NAME=$(echo "$VW_ADMIN_TOKEN" | ./scripts/ensure_secret.sh cerberus_vw_admin_token)" >> $GITHUB_ENV
+
+          # OIDC Secrets
+          echo "OIDC_PRIVATE_KEY_NAME=$(echo "$OIDC_PRIVATE_KEY" | ./scripts/ensure_secret.sh cerberus_oidc_key)" >> $GITHUB_ENV
 
       - name: Deploy Stack
         env:
