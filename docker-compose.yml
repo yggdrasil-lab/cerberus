@@ -60,7 +60,6 @@ services:
       - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/cerberus_session_secret
       - AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE=/run/secrets/cerberus_postgres_password
       - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/cerberus_storage_encryption_key
-      - AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_FILE=/run/secrets/cerberus_oidc_key
       - SESSION_NAME=authelia_session
     secrets:
       - cerberus_jwt_secret

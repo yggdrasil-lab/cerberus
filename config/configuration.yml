@@ -91,7 +91,7 @@ identity_providers:
       - key_id: 'default'
         algorithm: 'RS256'
         use: 'sig'
-        # Key loaded via AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_FILE
+        key: '{{ secret "/run/secrets/cerberus_oidc_key" }}'
     lifespans:
       access_token: 1h
       authorize_code: 1m
