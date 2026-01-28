@@ -18,7 +18,7 @@ identity_validation:
 authentication_backend:
   ldap:
     implementation: custom
-    url: ldap://lldap:3890
+    address: ldap://lldap:3890
     timeout: 5s
     start_tls: false
     base_dn: '{{ env "LLDAP_LDAP_BASE_DN" }}'
@@ -87,11 +87,13 @@ regulation:
 identity_providers:
   oidc:
     hmac_secret: '{{ secret "/run/secrets/cerberus_jwt_secret" }}' # Use the same JWT secret for HMAC
-    issuer_private_key: '{{ secret "/run/secrets/cerberus_oidc_key" }}'
-    access_token_lifespan: 1h
-    authorize_code_lifespan: 1m
-    id_token_lifespan: 1h
-    refresh_token_lifespan: 90m
+    jwks:
+      - key: '{{ secret "/run/secrets/cerberus_oidc_key" }}'
+    lifespans:
+      access_token: 1h
+      authorize_code: 1m
+      id_token: 1h
+      refresh_token: 90m
     enable_client_debug_messages: false
     clients:
       - client_id: portainer
@@ -106,4 +108,4 @@ identity_providers:
           - profile
           - groups
           - email
-        userinfo_signing_algorithm: none
+        userinfo_signed_response_alg: none
