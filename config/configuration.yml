@@ -88,7 +88,10 @@ identity_providers:
   oidc:
     hmac_secret: '{{ secret "/run/secrets/cerberus_jwt_secret" }}' # Use the same JWT secret for HMAC
     jwks:
-      - key: '{{ secret "/run/secrets/cerberus_oidc_key" }}'
+      - key_id: 'default'
+        algorithm: 'RS256'
+        use: 'sig'
+        # Key loaded via AUTHELIA_IDENTITY_PROVIDERS_OIDC_JWKS_0_KEY_FILE
     lifespans:
       access_token: 1h
       authorize_code: 1m
