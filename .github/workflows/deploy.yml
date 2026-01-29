@@ -26,6 +26,7 @@ jobs:
           VW_ADMIN_TOKEN: ${{ secrets.VW_ADMIN_TOKEN }}
           OIDC_PRIVATE_KEY: ${{ secrets.OIDC_PRIVATE_KEY }}
           OIDC_PORTAINER_CLIENT_SECRET: ${{ secrets.OIDC_PORTAINER_CLIENT_SECRET }}
+          OIDC_GRAFANA_CLIENT_SECRET: ${{ secrets.OIDC_GRAFANA_CLIENT_SECRET }}
         run: |
           chmod +x scripts/ensure_secret.sh
           
@@ -46,6 +47,7 @@ jobs:
           # OIDC Secrets
           echo "OIDC_PRIVATE_KEY_NAME=$(echo "$OIDC_PRIVATE_KEY" | ./scripts/ensure_secret.sh cerberus_oidc_key)" >> $GITHUB_ENV
           echo "OIDC_PORTAINER_CLIENT_SECRET_NAME=$(echo "$OIDC_PORTAINER_CLIENT_SECRET" | ./scripts/ensure_secret.sh cerberus_portainer_client_secret)" >> $GITHUB_ENV
+          echo "OIDC_GRAFANA_CLIENT_SECRET_NAME=$(echo "$OIDC_GRAFANA_CLIENT_SECRET" | ./scripts/ensure_secret.sh cerberus_grafana_client_secret)" >> $GITHUB_ENV
 
       - name: Deploy Stack
         env:
