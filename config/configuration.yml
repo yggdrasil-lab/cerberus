@@ -49,8 +49,8 @@ access_control:
       policy: two_factor
     - domain: 'eidos.{{ env "DOMAIN_NAME" }}'
       subject: 
-        - 'oauth2:client:eidos'
-        - 'group:admins'
+        - ['oauth2:client:eidos']
+        - ['group:admins']
       policy: one_factor
     - domain: '*.{{ env "DOMAIN_NAME" }}'
       subject: 'group:admins'
