@@ -47,6 +47,11 @@ access_control:
       policy: bypass
     - domain: 'ldap.{{ env "DOMAIN_NAME" }}'
       policy: two_factor
+    - domain: 'eidos.{{ env "DOMAIN_NAME" }}'
+      subject: 
+        - 'oauth2:client:eidos'
+        - 'group:admins'
+      policy: one_factor
     - domain: '*.{{ env "DOMAIN_NAME" }}'
       subject: 'group:admins'
       policy: two_factor
