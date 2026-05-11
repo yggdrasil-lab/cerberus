@@ -132,12 +132,10 @@ identity_providers:
         client_secret: '{{ secret "/run/secrets/cerberus_eidos_client_secret" }}'
         public: false
         authorization_policy: one_factor
-        token_endpoint_auth_method: client_secret_post
+        token_endpoint_auth_method: client_secret_basic
         grant_types:
           - client_credentials
+        audience:
+          - eidos
         scopes:
-          - openid
-          - profile
-          - groups
-          - email
           - authelia.bearer.authz
