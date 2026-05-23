@@ -21,4 +21,12 @@ if [ ! -d "/mnt/storage/backups/vaultwarden" ]; then
     sudo chown -R 1000:1000 /mnt/storage/backups/vaultwarden
 fi
 
+# LLDAP Backups
+if [ ! -d "/mnt/storage/backups/lldap" ]; then
+    echo "Creating /mnt/storage/backups/lldap..."
+    sudo mkdir -p /mnt/storage/backups/lldap
+    # Ensure writable by the backup user
+    sudo chown -R 1000:1000 /mnt/storage/backups/lldap
+fi
+
 echo "Host setup complete."
