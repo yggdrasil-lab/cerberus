@@ -132,8 +132,8 @@ To enable the `/admin` interface, you must configure the `ADMIN_TOKEN`. We store
 
 ### 6. Backup & Recovery
 
-**Strategy:**
-*   **Producer:** The `vaultwarden-backup` sidecar dumps an encrypted ZIP of the database + attachments daily at 3 AM.
+#### Vaultwarden
+*   **Strategy:** The `vaultwarden-backup` sidecar dumps an encrypted ZIP of the database + attachments daily at 3 AM.
 *   **Location:** `/mnt/storage/backups/vaultwarden/` on Muspelheim.
 *   **Encryption:** Backups are ZIP encrypted.
     *   **Default Password:** `WHEREISMYPASSWORD?` (Change this via `ZIP_PASSWORD` env var if desired).
@@ -144,6 +144,23 @@ To enable the `/admin` interface, you must configure the `ADMIN_TOKEN`. We store
 3.  **Extract:** Unzip using the password.
 4.  **Restore:** Replace the contents of `/opt/cerberus/vaultwarden/` with the extracted data.
 5.  **Restart:** `docker service scale cerberus_vaultwarden=1`
+
+#### LLDAP (Lightweight LDAP)
+*   **Strategy:** The `lldap-backup` sidecar runs a `crond` task daily at 3 AM to perform a consistent SQLite `.backup` of the database.
+*   **Location:** `/mnt/storage/backups/lldap/` on Gaia (manager).
+*   **Retention:** Retains backups for the last 30 days.
+
+**Restoration Steps:**
+An automated restore script is provided at `config/lldap-backup/restore.sh` on the Docker host:
+1.  **Run Restore Script:** Execute the restore script on the Gaia manager host:
+    ```bash
+    # To restore the latest available backup:
+    ./config/lldap-backup/restore.sh
+
+    # Or to restore a specific backup file:
+    ./config/lldap-backup/restore.sh /mnt/storage/backups/lldap/lldap_backup_YYYYMMDD_HHMMSS.db
+    ```
+2.  **Follow Prompts:** The script will automatically scale down the LLDAP service, restore the selected SQLite database to the volume, fix ownership permissions, and scale LLDAP back up.
 
 ## Execution
 

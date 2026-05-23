@@ -203,6 +203,31 @@ services:
         - "homepage.href=https://ldap.${DOMAIN_NAME}"
         - "homepage.description=Lightweight LDAP"
 
+  lldap-backup:
+    image: alpine:latest
+    container_name: lldap-backup
+    restart: always
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
+    entrypoint: ["sh", "-c", "apk add --no-cache sqlite tzdata && echo \"0 3 * * * /config/backup.sh >> /var/log/lldap-backup.log 2>&1\" | crontab - && exec crond -f -l 2"]
+    volumes:
+      - lldap_data:/data:ro
+      - /mnt/storage/backups/lldap:/backup
+    configs:
+      - source: lldap_backup_script
+        target: /config/backup.sh
+    environment:
+      - TZ=Pacific/Auckland
+      - BACKUP_KEEP_DAYS=30
+    depends_on:
+      - lldap
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
   vaultwarden:
     image: vaultwarden/server:latest
     container_name: vaultwarden
@@ -281,3 +306,5 @@ volumes:
 configs:
   vaultwarden_rclone_config:
     file: ./config/vaultwarden-backup/rclone.conf
+  lldap_backup_script:
+    file: ./config/lldap-backup/backup.sh
