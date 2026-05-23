@@ -75,6 +75,7 @@ storage:
     # password: "" # Loaded via environment variable AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE
 
 notifier:
+  disable_startup_check: true
   smtp:
     address: smtp://hermes:2525
     sender: 'Cerberus <cerberus@{{ env "DOMAIN_NAME" }}>'
