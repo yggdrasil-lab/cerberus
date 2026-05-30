@@ -7,10 +7,9 @@ flowchart LR
     User --> Traefik
     Traefik --> Authelia
     Authelia --> LLDAP[(LLDAP)]
-    Authelia --> Postgres[(PostgreSQL)]
+    Authelia --> Postgres[(authelia-postgres)]
     Authelia --> Redis[(Redis)]
     User --> Vaultwarden
-    Vaultwarden --> Postgres
 ```
 
 ## Services
