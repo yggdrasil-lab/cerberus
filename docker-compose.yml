@@ -219,6 +219,8 @@ services:
     environment:
       - TZ=Pacific/Auckland
       - BACKUP_KEEP_DAYS=30
+    networks:
+      - internal
     depends_on:
       - lldap
     deploy:
@@ -290,6 +292,8 @@ services:
     configs:
       - source: vaultwarden_rclone_config
         target: /config/rclone/rclone.conf
+    networks:
+      - internal
     depends_on:
       - vaultwarden
     deploy:
