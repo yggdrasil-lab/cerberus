@@ -107,7 +107,7 @@ services:
         - "traefik.http.services.authelia.loadbalancer.server.port=9091"
         - "traefik.docker.network=aether-net"
         # --- HOMEPAGE LABELS ---
-        - "homepage.group=Cerberus"
+        - "homepage.group=Identity"
         - "homepage.name=Authelia"
         - "homepage.icon=authelia.png"
         - "homepage.href=https://auth.${DOMAIN_NAME}"
@@ -197,7 +197,7 @@ services:
         - "traefik.http.services.lldap.loadbalancer.server.port=17170"
         - "traefik.docker.network=aether-net"
         # --- HOMEPAGE LABELS ---
-        - "homepage.group=Cerberus"
+        - "homepage.group=Identity"
         - "homepage.name=LLDAP"
         - "homepage.icon=lldap.png"
         - "homepage.href=https://ldap.${DOMAIN_NAME}"
@@ -266,7 +266,7 @@ services:
         - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
         - "traefik.docker.network=aether-net"
         # --- HOMEPAGE LABELS ---
-        - "homepage.group=Cerberus"
+        - "homepage.group=Identity"
         - "homepage.name=Vaultwarden"
         - "homepage.icon=vaultwarden.png"
         - "homepage.href=https://vault.${DOMAIN_NAME}"
