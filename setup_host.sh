@@ -29,4 +29,12 @@ if [ ! -d "/mnt/storage/backups/lldap" ]; then
     sudo chown -R 1000:1000 /mnt/storage/backups/lldap
 fi
 
+# Authentik Data
+if [ ! -d "/opt/cerberus/authentik" ]; then
+    echo "Creating /opt/cerberus/authentik..."
+    sudo mkdir -p /opt/cerberus/authentik
+    # Authentik runs as UID 1000 (non-root) in the official image.
+    sudo chown -R 1000:1000 /opt/cerberus/authentik
+fi
+
 echo "Host setup complete."

@@ -1,6 +1,6 @@
 # Cerberus — Identity, SSO & Secrets
 
-The gatekeeper stack for Yggdrasil. Authelia-powered SSO with LLDAP user directory and Vaultwarden password management. All services sit behind Traefik forward-auth middleware.
+The gatekeeper stack for Yggdrasil. Identity and SSO via Authelia (current) and Authentik (incoming, Google OIDC), with LLDAP user directory and Vaultwarden password management. All services sit behind Traefik forward-auth middleware.
 
 ```mermaid
 flowchart LR
@@ -10,6 +10,8 @@ flowchart LR
     Authelia --> Postgres[(authelia-postgres)]
     Authelia --> Redis[(Redis)]
     User --> Vaultwarden
+    User --> Authentik
+    Authentik --> AuthentikPostgres[(authentik-postgres)]
 ```
 
 ## Services
@@ -21,6 +23,9 @@ flowchart LR
 | Vaultwarden | Bitwarden-compatible password manager |
 | PostgreSQL | Persistent storage (preferences, OIDC tokens) |
 | Redis | Session cache |
+| Authentik server | Identity provider (Google OIDC) |
+| Authentik worker | Background task processing |
+| Authentik PostgreSQL | Authentik database |
 
 ## Deploy
 
