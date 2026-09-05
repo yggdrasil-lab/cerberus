@@ -26,6 +26,7 @@ flowchart LR
 | Authentik server | Identity provider (Google OIDC) |
 | Authentik worker | Background task processing |
 | Authentik PostgreSQL | Authentik database |
+| lldap-backup / vaultwarden-backup / authentik-backup | Nightly backups to /mnt/storage/backups (pushed off-host by Charon) |
 
 ## Deploy
 
