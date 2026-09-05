@@ -42,6 +42,15 @@ secrets:
   cerberus_eidos_client_secret:
     external: true
     name: ${OIDC_EIDOS_CLIENT_SECRET_NAME}
+  cerberus_authentik_secret_key:
+    external: true
+    name: ${AUTHENTIK_SECRET_KEY_NAME}
+  cerberus_authentik_postgres_password:
+    external: true
+    name: ${AUTHENTIK_POSTGRES_PASSWORD_NAME}
+  cerberus_authentik_bootstrap_password:
+    external: true
+    name: ${AUTHENTIK_BOOTSTRAP_PASSWORD_NAME}
 
 services:
   authelia:
@@ -302,13 +311,161 @@ services:
       placement:
         constraints: [ "node.hostname == muspelheim" ]
 
+  authentik-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
+    volumes:
+      - authentik_postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    environment:
+      - POSTGRES_USER=authentik
+      - POSTGRES_DB=authentik
+      - POSTGRES_PASSWORD_FILE=/run/secrets/cerberus_authentik_postgres_password
+    secrets:
+      - cerberus_authentik_postgres_password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2026.8.1
+    restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
+    command: server
+    shm_size: 512mb
+    volumes:
+      - /opt/cerberus/authentik:/data
+    networks:
+      - aether-net
+      - internal
+    environment:
+      - TZ=Pacific/Auckland
+      - AUTHENTIK_SECRET_KEY=file:///run/secrets/cerberus_authentik_secret_key
+      - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=file:///run/secrets/cerberus_authentik_postgres_password
+      - AUTHENTIK_BOOTSTRAP_PASSWORD=file:///run/secrets/cerberus_authentik_bootstrap_password
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+    secrets:
+      - cerberus_authentik_secret_key
+      - cerberus_authentik_postgres_password
+      - cerberus_authentik_bootstrap_password
+    depends_on:
+      - authentik-postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 15
+        window: 120s
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.authentik.rule=Host(`id.${DOMAIN_NAME}`)"
+        - "traefik.http.routers.authentik.entrypoints=websecure"
+        - "traefik.http.routers.authentik.tls=true"
+        - "traefik.http.services.authentik.loadbalancer.server.port=9000"
+        - "traefik.docker.network=aether-net"
+        # --- HOMEPAGE LABELS ---
+        - "homepage.group=Identity"
+        - "homepage.name=Authentik"
+        - "homepage.icon=authentik.png"
+        - "homepage.href=https://id.${DOMAIN_NAME}"
+        - "homepage.description=Identity Provider (Google OIDC)"
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:2026.8.1
+    restart: unless-stopped
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
+    command: worker
+    shm_size: 512mb
+    volumes:
+      - /opt/cerberus/authentik:/data
+    networks:
+      - internal
+    environment:
+      - TZ=Pacific/Auckland
+      - AUTHENTIK_SECRET_KEY=file:///run/secrets/cerberus_authentik_secret_key
+      - AUTHENTIK_POSTGRESQL__HOST=authentik-postgres
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=file:///run/secrets/cerberus_authentik_postgres_password
+      - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+    secrets:
+      - cerberus_authentik_secret_key
+      - cerberus_authentik_postgres_password
+    depends_on:
+      - authentik-postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 15
+        window: 120s
+
+  authentik-backup:
+    image: alpine:latest
+    container_name: authentik-backup
+    restart: always
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
+    entrypoint: ["sh", "-c", "apk add --no-cache postgresql-client tzdata && echo \"0 2 * * * /config/backup.sh >> /var/log/authentik-backup.log 2>&1\" | crontab - && exec crond -f -l 2"]
+    volumes:
+      - /opt/cerberus/authentik:/data:ro
+      - /mnt/storage/backups/authentik:/backup
+    configs:
+      - source: authentik_backup_script
+        target: /config/backup.sh
+    environment:
+      - TZ=Pacific/Auckland
+      - BACKUP_KEEP_DAYS=30
+    secrets:
+      - cerberus_authentik_postgres_password
+    networks:
+      - internal
+    depends_on:
+      - authentik-postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
 volumes:
   postgres_data:
   redis_data:
   lldap_data:
+  authentik_postgres_data:
 
 configs:
   vaultwarden_rclone_config:
     file: ./config/vaultwarden-backup/rclone.conf
   lldap_backup_script:
     file: ./config/lldap-backup/backup.sh
+  authentik_backup_script:
+    file: ./config/authentik-backup/backup.sh
