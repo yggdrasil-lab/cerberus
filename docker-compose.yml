@@ -51,6 +51,9 @@ secrets:
   cerberus_authentik_bootstrap_password:
     external: true
     name: ${AUTHENTIK_BOOTSTRAP_PASSWORD_NAME}
+  cerberus_authentik_ldap_token:
+    external: true
+    name: ${AUTHENTIK_LDAP_TOKEN_NAME}
 
 services:
   authelia:
@@ -535,7 +538,7 @@ services:
     image: alpine:latest
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
-    entrypoint: ["sh", "-c", "apk add --no-cache postgresql-client tzdata && echo \"0 2 * * * /config/backup.sh >> /var/log/authentik-backup.log 2>&1\" | crontab - && exec crond -f -l 2"]
+    entrypoint: ["sh", "-c", "apk add --no-cache postgresql-client tzdata && echo \"Running initial backup...\" && sh /config/backup.sh && echo \"Initial backup complete. Setting up daily cron...\" && echo \"0 2 * * * sh /config/backup.sh >> /var/log/authentik-backup.log 2>&1\" | crontab - && echo \"Starting crond...\" && exec crond -f -l 2"]
     volumes:
       - /opt/cerberus/authentik:/data:ro
       - /mnt/storage/backups/authentik:/backup
@@ -562,6 +565,39 @@ services:
           memory: 512M
         reservations:
           memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+
+  authentik-ldap:
+    image: ghcr.io/goauthentik/ldap:2026.8.1
+    labels:
+      - "com.docker.compose.project=${STACK_NAME}"
+    networks:
+      aether-net:
+        aliases:
+          - authentik-ldap
+      internal:
+    environment:
+      - AUTHENTIK_HOST=http://authentik-server:9000
+      - AUTHENTIK_INSECURE=false
+      - AUTHENTIK_TOKEN=file:///run/secrets/cerberus_authentik_ldap_token
+    secrets:
+      - cerberus_authentik_ldap_token
+    depends_on:
+      - authentik-server
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
       restart_policy:
         condition: any
         delay: 5s
