@@ -58,13 +58,14 @@ services:
     build:
       context: .
       dockerfile: authelia/Dockerfile
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     user: "1000:1000"
     networks:
-      - aether-net
-      - internal
+      aether-net:
+        aliases:
+          - authelia
+      internal:
     environment:
       - TZ=UTC
       - DOMAIN_NAME=${DOMAIN_NAME}
@@ -90,16 +91,26 @@ services:
       - authelia-postgres
       - authelia-redis
       - lldap
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:9091/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 5s
-        max_attempts: 15
         window: 120s
       labels:
         - "traefik.enable=true"
@@ -124,8 +135,6 @@ services:
 
   authelia-postgres:
     image: postgres:15-alpine
-
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     volumes:
@@ -138,17 +147,30 @@ services:
       - POSTGRES_PASSWORD_FILE=/run/secrets/cerberus_postgres_password
     secrets:
       - cerberus_postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d authelia -U authelia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
 
   authelia-redis:
     image: redis:7-alpine
-
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     volumes:
@@ -156,24 +178,39 @@ services:
     networks:
       - internal
     command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
 
   lldap:
     image: lldap/lldap:latest
-
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     volumes:
       - lldap_data:/data
     networks:
-      - internal
-      - aether-net
+      aether-net:
+        aliases:
+          - lldap
+      internal:
     environment:
       - TZ=UTC
       - LLDAP_JWT_SECRET_FILE=/run/secrets/cerberus_lldap_jwt_secret
@@ -197,6 +234,15 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.lldap.rule=Host(`ldap.${DOMAIN_NAME}`)"
@@ -214,8 +260,6 @@ services:
 
   lldap-backup:
     image: alpine:latest
-    container_name: lldap-backup
-    restart: always
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     entrypoint: ["sh", "-c", "apk add --no-cache sqlite tzdata && echo \"0 3 * * * /config/backup.sh >> /var/log/lldap-backup.log 2>&1\" | crontab - && exec crond -f -l 2"]
@@ -238,11 +282,18 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
 
   vaultwarden:
     image: vaultwarden/server:latest
-    container_name: vaultwarden
-    restart: always
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     environment:
@@ -261,12 +312,29 @@ services:
     volumes:
       - /opt/cerberus/vaultwarden:/data
     networks:
-      - aether-net
+      aether-net:
+        aliases:
+          - vaultwarden
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints: [ "node.hostname == muspelheim" ]
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.vaultwarden.rule=Host(`vault.${DOMAIN_NAME}`)"
@@ -283,8 +351,6 @@ services:
 
   vaultwarden-backup:
     image: ttionya/vaultwarden-backup:latest
-    container_name: vaultwarden-backup
-    restart: always
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     environment:
@@ -310,10 +376,18 @@ services:
       replicas: 1
       placement:
         constraints: [ "node.hostname == muspelheim" ]
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
 
   authentik-postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     volumes:
@@ -338,10 +412,18 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
 
   authentik-server:
     image: ghcr.io/goauthentik/server:2026.8.1
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     command: server
@@ -349,8 +431,11 @@ services:
     volumes:
       - /opt/cerberus/authentik:/data
     networks:
-      - aether-net
-      - internal
+      aether-net:
+        aliases:
+          - authentik
+          - authentik-server
+      internal:
     environment:
       - TZ=Pacific/Auckland
       - AUTHENTIK_SECRET_KEY=file:///run/secrets/cerberus_authentik_secret_key
@@ -366,16 +451,26 @@ services:
       - cerberus_authentik_bootstrap_password
     depends_on:
       - authentik-postgres
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 512M
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 5s
-        max_attempts: 15
         window: 120s
       labels:
         - "traefik.enable=true"
@@ -393,7 +488,6 @@ services:
 
   authentik-worker:
     image: ghcr.io/goauthentik/server:2026.8.1
-    restart: unless-stopped
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     command: worker
@@ -415,22 +509,30 @@ services:
       - cerberus_authentik_postgres_password
     depends_on:
       - authentik-postgres
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     deploy:
       mode: replicated
       replicas: 1
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 512M
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 5s
-        max_attempts: 15
         window: 120s
 
   authentik-backup:
     image: alpine:latest
-    container_name: authentik-backup
-    restart: always
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     entrypoint: ["sh", "-c", "apk add --no-cache postgresql-client tzdata && echo \"0 2 * * * /config/backup.sh >> /var/log/authentik-backup.log 2>&1\" | crontab - && exec crond -f -l 2"]
@@ -455,6 +557,15 @@ services:
       placement:
         constraints:
           - node.role == manager
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
 
 volumes:
   postgres_data:

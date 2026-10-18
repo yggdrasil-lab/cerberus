@@ -11,8 +11,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Setup Secrets
         env:
@@ -33,32 +31,33 @@ jobs:
           AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.AUTHENTIK_POSTGRES_PASSWORD }}
           AUTHENTIK_BOOTSTRAP_PASSWORD: ${{ secrets.AUTHENTIK_BOOTSTRAP_PASSWORD }}
         run: |
-          chmod +x scripts/ensure_secret.sh
+          curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/deploy/ensure_secret.sh -o /tmp/ensure_secret.sh
+          chmod +x /tmp/ensure_secret.sh
           
           # Authelia Secrets
-          echo "JWT_SECRET_NAME=$(echo "$JWT_SECRET" | ./scripts/ensure_secret.sh cerberus_jwt_secret)" >> $GITHUB_ENV
-          echo "SESSION_SECRET_NAME=$(echo "$SESSION_SECRET" | ./scripts/ensure_secret.sh cerberus_session_secret)" >> $GITHUB_ENV
-          echo "STORAGE_ENCRYPTION_KEY_NAME=$(echo "$STORAGE_ENCRYPTION_KEY" | ./scripts/ensure_secret.sh cerberus_storage_encryption_key)" >> $GITHUB_ENV
-          echo "POSTGRES_PASSWORD_NAME=$(echo "$POSTGRES_PASSWORD" | ./scripts/ensure_secret.sh cerberus_postgres_password)" >> $GITHUB_ENV
+          echo "JWT_SECRET_NAME=$(echo "$JWT_SECRET" | /tmp/ensure_secret.sh cerberus_jwt_secret)" >> $GITHUB_ENV
+          echo "SESSION_SECRET_NAME=$(echo "$SESSION_SECRET" | /tmp/ensure_secret.sh cerberus_session_secret)" >> $GITHUB_ENV
+          echo "STORAGE_ENCRYPTION_KEY_NAME=$(echo "$STORAGE_ENCRYPTION_KEY" | /tmp/ensure_secret.sh cerberus_storage_encryption_key)" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD_NAME=$(echo "$POSTGRES_PASSWORD" | /tmp/ensure_secret.sh cerberus_postgres_password)" >> $GITHUB_ENV
           
           # LLDAP Secrets
-          echo "LLDAP_JWT_SECRET_NAME=$(echo "$LLDAP_JWT_SECRET" | ./scripts/ensure_secret.sh cerberus_lldap_jwt_secret)" >> $GITHUB_ENV
-          echo "LLDAP_KEY_SEED_NAME=$(echo "$LLDAP_KEY_SEED" | ./scripts/ensure_secret.sh cerberus_lldap_key_seed)" >> $GITHUB_ENV
-          echo "LLDAP_LDAP_USER_PASS_NAME=$(echo "$LLDAP_LDAP_USER_PASS" | ./scripts/ensure_secret.sh cerberus_lldap_user_pass)" >> $GITHUB_ENV
+          echo "LLDAP_JWT_SECRET_NAME=$(echo "$LLDAP_JWT_SECRET" | /tmp/ensure_secret.sh cerberus_lldap_jwt_secret)" >> $GITHUB_ENV
+          echo "LLDAP_KEY_SEED_NAME=$(echo "$LLDAP_KEY_SEED" | /tmp/ensure_secret.sh cerberus_lldap_key_seed)" >> $GITHUB_ENV
+          echo "LLDAP_LDAP_USER_PASS_NAME=$(echo "$LLDAP_LDAP_USER_PASS" | /tmp/ensure_secret.sh cerberus_lldap_user_pass)" >> $GITHUB_ENV
           
           # Vaultwarden Secrets
-          echo "VW_ADMIN_TOKEN_NAME=$(echo "$VW_ADMIN_TOKEN" | ./scripts/ensure_secret.sh cerberus_vw_admin_token)" >> $GITHUB_ENV
+          echo "VW_ADMIN_TOKEN_NAME=$(echo "$VW_ADMIN_TOKEN" | /tmp/ensure_secret.sh cerberus_vw_admin_token)" >> $GITHUB_ENV
 
           # OIDC Secrets
-          echo "OIDC_PRIVATE_KEY_NAME=$(echo "$OIDC_PRIVATE_KEY" | ./scripts/ensure_secret.sh cerberus_oidc_key)" >> $GITHUB_ENV
-          echo "OIDC_PORTAINER_CLIENT_SECRET_NAME=$(echo "$OIDC_PORTAINER_CLIENT_SECRET" | ./scripts/ensure_secret.sh cerberus_portainer_client_secret)" >> $GITHUB_ENV
-          echo "OIDC_GRAFANA_CLIENT_SECRET_NAME=$(echo "$OIDC_GRAFANA_CLIENT_SECRET" | ./scripts/ensure_secret.sh cerberus_grafana_client_secret)" >> $GITHUB_ENV
-          echo "OIDC_EIDOS_CLIENT_SECRET_NAME=$(echo "$OIDC_EIDOS_CLIENT_SECRET" | ./scripts/ensure_secret.sh cerberus_eidos_client_secret)" >> $GITHUB_ENV
+          echo "OIDC_PRIVATE_KEY_NAME=$(echo "$OIDC_PRIVATE_KEY" | /tmp/ensure_secret.sh cerberus_oidc_key)" >> $GITHUB_ENV
+          echo "OIDC_PORTAINER_CLIENT_SECRET_NAME=$(echo "$OIDC_PORTAINER_CLIENT_SECRET" | /tmp/ensure_secret.sh cerberus_portainer_client_secret)" >> $GITHUB_ENV
+          echo "OIDC_GRAFANA_CLIENT_SECRET_NAME=$(echo "$OIDC_GRAFANA_CLIENT_SECRET" | /tmp/ensure_secret.sh cerberus_grafana_client_secret)" >> $GITHUB_ENV
+          echo "OIDC_EIDOS_CLIENT_SECRET_NAME=$(echo "$OIDC_EIDOS_CLIENT_SECRET" | /tmp/ensure_secret.sh cerberus_eidos_client_secret)" >> $GITHUB_ENV
 
           # Authentik Secrets
-          echo "AUTHENTIK_SECRET_KEY_NAME=$(echo "$AUTHENTIK_SECRET_KEY" | ./scripts/ensure_secret.sh cerberus_authentik_secret_key)" >> $GITHUB_ENV
-          echo "AUTHENTIK_POSTGRES_PASSWORD_NAME=$(echo "$AUTHENTIK_POSTGRES_PASSWORD" | ./scripts/ensure_secret.sh cerberus_authentik_postgres_password)" >> $GITHUB_ENV
-          echo "AUTHENTIK_BOOTSTRAP_PASSWORD_NAME=$(echo "$AUTHENTIK_BOOTSTRAP_PASSWORD" | ./scripts/ensure_secret.sh cerberus_authentik_bootstrap_password)" >> $GITHUB_ENV
+          echo "AUTHENTIK_SECRET_KEY_NAME=$(echo "$AUTHENTIK_SECRET_KEY" | /tmp/ensure_secret.sh cerberus_authentik_secret_key)" >> $GITHUB_ENV
+          echo "AUTHENTIK_POSTGRES_PASSWORD_NAME=$(echo "$AUTHENTIK_POSTGRES_PASSWORD" | /tmp/ensure_secret.sh cerberus_authentik_postgres_password)" >> $GITHUB_ENV
+          echo "AUTHENTIK_BOOTSTRAP_PASSWORD_NAME=$(echo "$AUTHENTIK_BOOTSTRAP_PASSWORD" | /tmp/ensure_secret.sh cerberus_authentik_bootstrap_password)" >> $GITHUB_ENV
 
       - name: Deploy Stack
         env:
@@ -67,5 +66,6 @@ jobs:
           LLDAP_LDAP_BASE_DN: ${{ vars.LLDAP_LDAP_BASE_DN }}
           LLDAP_LDAP_USER_EMAIL: ${{ secrets.ADMIN_EMAIL }}
         run: |
-          chmod +x scripts/deploy.sh
-          ./scripts/deploy.sh "cerberus" docker-compose.yml
+          curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/deploy/deploy.sh -o /tmp/deploy.sh
+          chmod +x /tmp/deploy.sh
+          /tmp/deploy.sh "cerberus" docker-compose.yml
