@@ -305,7 +305,7 @@ services:
       - WEBSOCKET_ENABLED=true
       - ROCKET_WORKERS=10
       - ADMIN_TOKEN_FILE=/run/secrets/cerberus_vw_admin_token
-      - SMTP_HOST=hermes
+      - SMTP_HOST=iris
       - SMTP_FROM=cerberus@${DOMAIN_NAME}
       - SMTP_PORT=2525
       - SMTP_SECURITY=off
@@ -448,6 +448,11 @@ services:
       - AUTHENTIK_POSTGRESQL__PASSWORD=file:///run/secrets/cerberus_authentik_postgres_password
       - AUTHENTIK_BOOTSTRAP_PASSWORD=file:///run/secrets/cerberus_authentik_bootstrap_password
       - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+      - AUTHENTIK_EMAIL__HOST=iris
+      - AUTHENTIK_EMAIL__PORT=2525
+      - AUTHENTIK_EMAIL__USE_TLS=false
+      - AUTHENTIK_EMAIL__USE_SSL=false
+      - AUTHENTIK_EMAIL__FROM=authentik@${DOMAIN_NAME}
     secrets:
       - cerberus_authentik_secret_key
       - cerberus_authentik_postgres_password
@@ -498,6 +503,7 @@ services:
     volumes:
       - /opt/cerberus/authentik:/data
     networks:
+      - aether-net
       - internal
     environment:
       - TZ=Pacific/Auckland
@@ -507,6 +513,11 @@ services:
       - AUTHENTIK_POSTGRESQL__USER=authentik
       - AUTHENTIK_POSTGRESQL__PASSWORD=file:///run/secrets/cerberus_authentik_postgres_password
       - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+      - AUTHENTIK_EMAIL__HOST=iris
+      - AUTHENTIK_EMAIL__PORT=2525
+      - AUTHENTIK_EMAIL__USE_TLS=false
+      - AUTHENTIK_EMAIL__USE_SSL=false
+      - AUTHENTIK_EMAIL__FROM=authentik@${DOMAIN_NAME}
     secrets:
       - cerberus_authentik_secret_key
       - cerberus_authentik_postgres_password
