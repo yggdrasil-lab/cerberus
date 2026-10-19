@@ -306,7 +306,7 @@ services:
       - ROCKET_WORKERS=10
       - ADMIN_TOKEN_FILE=/run/secrets/cerberus_vw_admin_token
       - SMTP_HOST=iris
-      - SMTP_FROM=cerberus@${DOMAIN_NAME}
+      - SMTP_FROM=no-reply@${DOMAIN_NAME}
       - SMTP_PORT=2525
       - SMTP_SECURITY=off
       - SMTP_AUTH_MECHANISM=none
@@ -452,7 +452,7 @@ services:
       - AUTHENTIK_EMAIL__PORT=2525
       - AUTHENTIK_EMAIL__USE_TLS=false
       - AUTHENTIK_EMAIL__USE_SSL=false
-      - AUTHENTIK_EMAIL__FROM=authentik@${DOMAIN_NAME}
+      - AUTHENTIK_EMAIL__FROM=no-reply@${DOMAIN_NAME}
     secrets:
       - cerberus_authentik_secret_key
       - cerberus_authentik_postgres_password
@@ -517,7 +517,7 @@ services:
       - AUTHENTIK_EMAIL__PORT=2525
       - AUTHENTIK_EMAIL__USE_TLS=false
       - AUTHENTIK_EMAIL__USE_SSL=false
-      - AUTHENTIK_EMAIL__FROM=authentik@${DOMAIN_NAME}
+      - AUTHENTIK_EMAIL__FROM=no-reply@${DOMAIN_NAME}
     secrets:
       - cerberus_authentik_secret_key
       - cerberus_authentik_postgres_password
