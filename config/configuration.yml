@@ -77,7 +77,7 @@ storage:
 notifier:
   disable_startup_check: true
   smtp:
-    address: smtp://hermes:2525
+    address: smtp://iris:2525
     sender: 'Cerberus <cerberus@{{ env "DOMAIN_NAME" }}>'
     identifier: localhost
     disable_require_tls: true
