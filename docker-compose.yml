@@ -167,6 +167,14 @@ services:
           memory: 512M
         reservations:
           memory: 128M
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        parallelism: 1
+        order: stop-first
       restart_policy:
         condition: any
         delay: 5s
@@ -420,6 +428,14 @@ services:
           memory: 1024M
         reservations:
           memory: 256M
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        parallelism: 1
+        order: stop-first
       restart_policy:
         condition: any
         delay: 5s
@@ -430,9 +446,12 @@ services:
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     command: server
-    shm_size: 512mb
     volumes:
       - /opt/cerberus/authentik:/data
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 536870912
     networks:
       aether-net:
         aliases:
@@ -485,6 +504,9 @@ services:
         - "traefik.http.routers.authentik.rule=Host(`id.${DOMAIN_NAME}`)"
         - "traefik.http.routers.authentik.entrypoints=websecure"
         - "traefik.http.routers.authentik.tls=true"
+        - "traefik.http.middlewares.authentik.forwardauth.address=http://authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+        - "traefik.http.middlewares.authentik.forwardauth.trustForwardHeader=true"
+        - "traefik.http.middlewares.authentik.forwardauth.authResponseHeaders=X-authentik-username,X-authentik-groups,X-authentik-email,X-authentik-name,X-authentik-uid"
         - "traefik.http.services.authentik.loadbalancer.server.port=9000"
         - "traefik.docker.network=aether-net"
         # --- HOMEPAGE LABELS ---
@@ -499,9 +521,12 @@ services:
     labels:
       - "com.docker.compose.project=${STACK_NAME}"
     command: worker
-    shm_size: 512mb
     volumes:
       - /opt/cerberus/authentik:/data
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 536870912
     networks:
       - aether-net
       - internal
