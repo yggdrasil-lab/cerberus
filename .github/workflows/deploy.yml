@@ -59,7 +59,7 @@ jobs:
           echo "AUTHENTIK_SECRET_KEY_NAME=$(echo "$AUTHENTIK_SECRET_KEY" | /tmp/ensure_secret.sh cerberus_authentik_secret_key)" >> $GITHUB_ENV
           echo "AUTHENTIK_POSTGRES_PASSWORD_NAME=$(echo "$AUTHENTIK_POSTGRES_PASSWORD" | /tmp/ensure_secret.sh cerberus_authentik_postgres_password)" >> $GITHUB_ENV
           echo "AUTHENTIK_BOOTSTRAP_PASSWORD_NAME=$(echo "$AUTHENTIK_BOOTSTRAP_PASSWORD" | /tmp/ensure_secret.sh cerberus_authentik_bootstrap_password)" >> $GITHUB_ENV
-          echo "AUTHENTIK_LDAP_TOKEN_NAME=$(echo "${AUTHENTIK_LDAP_TOKEN:-placeholder_token}" | /tmp/ensure_secret.sh cerberus_authentik_ldap_token)" >> $GITHUB_ENV
+          echo "AUTHENTIK_LDAP_TOKEN_NAME=$(echo "$AUTHENTIK_LDAP_TOKEN" | /tmp/ensure_secret.sh cerberus_authentik_ldap_token)" >> $GITHUB_ENV
 
       - name: Deploy Stack
         env:
