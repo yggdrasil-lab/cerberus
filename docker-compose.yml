@@ -370,7 +370,10 @@ services:
     volumes:
       - authentik_postgres_data:/var/lib/postgresql/data
     networks:
-      - internal
+      aether-net:
+        aliases:
+          - authentik-postgres
+      internal:
     environment:
       - POSTGRES_USER=authentik
       - POSTGRES_DB=authentik
