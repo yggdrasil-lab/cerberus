@@ -326,43 +326,6 @@ services:
         - "homepage.href=https://vault.${DOMAIN_NAME}"
         - "homepage.description=Password Manager"
 
-  vaultwarden-backup:
-    image: ttionya/vaultwarden-backup:latest
-    labels:
-      - "com.docker.compose.project=${STACK_NAME}"
-    environment:
-      - DATA_DIR=/data
-      - TZ=Pacific/Auckland
-      - CRON=0 3 * * * # 3 AM Daily
-      - BACKUP_KEEP_DAYS=30
-      - RCLONE_REMOTE_NAME=local
-      - RCLONE_REMOTE_DIR=/backup
-      - ATTACHMENT_ENABLE=true
-    volumes:
-      - /opt/cerberus/vaultwarden:/data:ro # Read-only access to DB
-      - /mnt/storage/backups/vaultwarden:/backup # Shared volume with Charon
-    configs:
-      - source: vaultwarden_rclone_config
-        target: /config/rclone/rclone.conf
-    networks:
-      - internal
-    depends_on:
-      - vaultwarden
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints: [ "node.hostname == muspelheim" ]
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 128M
-      restart_policy:
-        condition: any
-        delay: 5s
-        window: 120s
-
   authentik-postgres:
     image: postgres:16-alpine
     labels:
@@ -577,7 +540,3 @@ volumes:
   redis_data:
   lldap_data:
   authentik_postgres_data:
-
-configs:
-  vaultwarden_rclone_config:
-    file: ./config/vaultwarden-backup/rclone.conf
