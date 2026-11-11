@@ -519,6 +519,12 @@ services:
       - cerberus_authentik_ldap_token
     depends_on:
       - authentik-server
+    healthcheck:
+      test: ["CMD", "/ldap", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       mode: replicated
       replicas: 1
