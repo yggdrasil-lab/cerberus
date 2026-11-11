@@ -12,6 +12,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate Required Configuration
+        env:
+          DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          LLDAP_LDAP_BASE_DN: ${{ vars.LLDAP_LDAP_BASE_DN }}
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          STORAGE_ENCRYPTION_KEY: ${{ secrets.STORAGE_ENCRYPTION_KEY }}
+          LLDAP_JWT_SECRET: ${{ secrets.LLDAP_JWT_SECRET }}
+          LLDAP_KEY_SEED: ${{ secrets.LLDAP_KEY_SEED }}
+          LLDAP_LDAP_USER_PASS: ${{ secrets.LLDAP_LDAP_USER_PASS }}
+          VW_ADMIN_TOKEN: ${{ secrets.VW_ADMIN_TOKEN }}
+          OIDC_PRIVATE_KEY: ${{ secrets.OIDC_PRIVATE_KEY }}
+          OIDC_PORTAINER_CLIENT_SECRET: ${{ secrets.OIDC_PORTAINER_CLIENT_SECRET }}
+          OIDC_GRAFANA_CLIENT_SECRET: ${{ secrets.OIDC_GRAFANA_CLIENT_SECRET }}
+          OIDC_EIDOS_CLIENT_SECRET: ${{ secrets.OIDC_EIDOS_CLIENT_SECRET }}
+          AUTHENTIK_SECRET_KEY: ${{ secrets.AUTHENTIK_SECRET_KEY }}
+          AUTHENTIK_POSTGRES_PASSWORD: ${{ secrets.AUTHENTIK_POSTGRES_PASSWORD }}
+          AUTHENTIK_BOOTSTRAP_PASSWORD: ${{ secrets.AUTHENTIK_BOOTSTRAP_PASSWORD }}
+          AUTHENTIK_LDAP_TOKEN: ${{ secrets.AUTHENTIK_LDAP_TOKEN }}
+        run: |
+          MISSING=""
+          [ -z "$DOMAIN_NAME" ] && MISSING="$MISSING DOMAIN_NAME"
+          [ -z "$LLDAP_LDAP_BASE_DN" ] && MISSING="$MISSING LLDAP_LDAP_BASE_DN"
+          [ -z "$ADMIN_EMAIL" ] && MISSING="$MISSING ADMIN_EMAIL"
+          [ -z "$JWT_SECRET" ] && MISSING="$MISSING JWT_SECRET"
+          [ -z "$SESSION_SECRET" ] && MISSING="$MISSING SESSION_SECRET"
+          [ -z "$POSTGRES_PASSWORD" ] && MISSING="$MISSING POSTGRES_PASSWORD"
+          [ -z "$STORAGE_ENCRYPTION_KEY" ] && MISSING="$MISSING STORAGE_ENCRYPTION_KEY"
+          [ -z "$LLDAP_JWT_SECRET" ] && MISSING="$MISSING LLDAP_JWT_SECRET"
+          [ -z "$LLDAP_KEY_SEED" ] && MISSING="$MISSING LLDAP_KEY_SEED"
+          [ -z "$LLDAP_LDAP_USER_PASS" ] && MISSING="$MISSING LLDAP_LDAP_USER_PASS"
+          [ -z "$VW_ADMIN_TOKEN" ] && MISSING="$MISSING VW_ADMIN_TOKEN"
+          [ -z "$OIDC_PRIVATE_KEY" ] && MISSING="$MISSING OIDC_PRIVATE_KEY"
+          [ -z "$OIDC_PORTAINER_CLIENT_SECRET" ] && MISSING="$MISSING OIDC_PORTAINER_CLIENT_SECRET"
+          [ -z "$OIDC_GRAFANA_CLIENT_SECRET" ] && MISSING="$MISSING OIDC_GRAFANA_CLIENT_SECRET"
+          [ -z "$OIDC_EIDOS_CLIENT_SECRET" ] && MISSING="$MISSING OIDC_EIDOS_CLIENT_SECRET"
+          [ -z "$AUTHENTIK_SECRET_KEY" ] && MISSING="$MISSING AUTHENTIK_SECRET_KEY"
+          [ -z "$AUTHENTIK_POSTGRES_PASSWORD" ] && MISSING="$MISSING AUTHENTIK_POSTGRES_PASSWORD"
+          [ -z "$AUTHENTIK_BOOTSTRAP_PASSWORD" ] && MISSING="$MISSING AUTHENTIK_BOOTSTRAP_PASSWORD"
+          [ -z "$AUTHENTIK_LDAP_TOKEN" ] && MISSING="$MISSING AUTHENTIK_LDAP_TOKEN"
+          if [ -n "$MISSING" ]; then
+            echo "::error::Deployment halted: missing required configuration:$MISSING" >&2
+            exit 1
+          fi
+
       - name: Setup Secrets
         env:
           # Secrets needed for generation
@@ -66,7 +113,7 @@ jobs:
           # Domain Variables
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
           LLDAP_LDAP_BASE_DN: ${{ vars.LLDAP_LDAP_BASE_DN }}
-          LLDAP_LDAP_USER_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          LLDAP_LDAP_USER_EMAIL: ${{ vars.ADMIN_EMAIL }}
         run: |
           curl -fsSL https://raw.githubusercontent.com/yggdrasil-lab/yggdrasil-os/main/deploy/deploy.sh -o /tmp/deploy.sh
           chmod +x /tmp/deploy.sh
